@@ -1,0 +1,12 @@
+Options -Indexes
+ErrorDocument 404 /redbel/error_pages/error404.php
+ErrorDocument 403 /redbel/error_pages/error403.php
+ErrorDocument 500 /redbel/error_pages/error500.php
+
+
+
+
+
+
+
+

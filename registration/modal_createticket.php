@@ -1,0 +1,159 @@
+<?php 
+include('../check_session.php');
+$moduleid=1;
+$conn = connectionDB();
+// echo "usergroupid:".$usergroupid;
+$rest = "";
+if($usergroupid == 4){
+	$query = "SELECT companyid FROM sys_usertb WHERE id = '$userid'";
+	$result = mysqli_query($conn, $query);
+	while($row = mysqli_fetch_assoc($result)){
+		$companyid=$row['companyid'];
+	}	
+	$rest.="WHERE clientid = '$companyid' AND statusid IN ('1','2','3','4','5','6')";
+}else{$rest = "";}
+
+?>
+<!-- jQuery Tags Input -->
+<link href="../assets/customjs/jquery.tagsinput.css" rel="stylesheet">
+<!-- page specific plugin styles -->
+		<link rel="stylesheet" href="../assets/css/chosen.min.css" />
+<div class="modal-body">
+	<!--<div id="signup-box" class="signup-box widget-box no-border">-->
+	<div id="signup-box" class="signup-box widget-box no-border">
+		<div class="widget-body">
+			<!--<div class="widget-main">-->
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true"><small>×</small></button>
+				<h4 class="header green lighter bigger">
+					<i class="ace-icon fa fa-users blue"></i>
+					New Ticket
+				</h4>
+				<p> Enter your ticket details to begin: </p>
+				<form id="ticketInfo">
+					<input type="hidden" class="form-control" id="ticketUserid" name="ticketUserid" value="<?php echo $userid;?>"/>
+					<fieldset>
+						<div class="row">
+							<div class="col-lg-6">
+								<div class="form-group">
+									<label class="block clearfix">Project Name
+										<span class="block input-icon input-icon-left">
+											<select class="form-control" id="ticketProjectOwner" name="ticketProjectOwner">
+												<option value="">Select Owner</option>
+												<?php 
+													$query66 = "SELECT id,projectname FROM sys_projecttb $rest";
+													$result66 = mysqli_query($conn, $query66);
+													while($row66 = mysqli_fetch_assoc($result66)){
+														$projectname=mb_convert_case($row66['projectname'], MB_CASE_TITLE, "UTF-8");
+														$projectid=$row66['id'];
+												?>
+												<option value="<?php echo $projectid;?>"><?php echo $projectname;?></option>
+												<?php } ?>
+											</select>
+										</span>
+									</label>
+								</div>	
+							</div>	
+							<div class="col-lg-6">
+								<div class="form-group">
+									<label class="block clearfix">Classification
+										<span class="block input-icon input-icon-left">
+											<select class="form-control" id="ticketClassification" name="ticketClassification">
+												<option value="">Select Classification</option>
+												<?php 
+													$query66 = "SELECT id,classification FROM sys_taskclassificationtb";
+													$result66 = mysqli_query($conn, $query66);
+													while($row66 = mysqli_fetch_assoc($result66)){
+														$classification=mb_convert_case($row66['classification'], MB_CASE_TITLE, "UTF-8");
+														$classificationid=$row66['id'];
+												?>
+												<option value="<?php echo $classificationid;?>"><?php echo $classification;?></option>
+												<?php } ?>
+											</select>
+										</span>
+									</label>
+								</div>	
+							</div>
+							<div class="col-lg-6">
+								<div class="form-group">
+									<label class="block clearfix">Priority Level
+										<span class="block input-icon input-icon-left">
+											<select class="form-control" id="ticketPriority" name="ticketPriority">
+												<option value="">Select Priority</option>
+												<?php 
+													$query66 = "SELECT id,priorityname FROM sys_priorityleveltb";
+													$result66 = mysqli_query($conn, $query66);
+													while($row66 = mysqli_fetch_assoc($result66)){
+														$priorityname=mb_convert_case($row66['priorityname'], MB_CASE_TITLE, "UTF-8");
+														$prioritynameid=$row66['id'];
+												?>
+												<option value="<?php echo $prioritynameid;?>"><?php echo $priorityname;?></option>
+												<?php } ?>
+											</select>
+										</span>
+									</label>
+								</div>	
+							</div>
+							<div class="col-lg-6">
+								<div class="form-group">
+									<label class="block clearfix">Subject
+										<span class="block input-icon input-icon-left">
+											<i class="ace-icon fa fa-user"></i>
+											<input class="form-control" placeholder="ticketSubject" id="ticketSubject" name="ticketSubject" />
+										</span>
+									</label>
+								</div>	
+							</div>
+							<div class="col-lg-6">
+								<div class="form-group">
+									<label class="block clearfix">Target Date
+										<span class="block input-icon input-icon-left">
+										<i class="ace-icon fa fa-calendar"></i>
+											<input class="form-control date-picker" id="ticketTargetDate" name="ticketTargetDate" type="text" data-date-format="yyyy-mm-dd" placeholder="yyyy-mm-dd"/>
+										</span>
+									</label>
+								</div>
+							</div>
+							
+							<div class="col-lg-12">
+								<div class="form-group">
+									<label class="block clearfix">Description
+										<textarea id="description" name="description" rows="5" cols="80"></textarea>
+									</label>
+								</div>	
+							</div>
+						</div>	
+						<div class="clearfix">
+							<div id="flash5"></div>	
+							<div id="insert_search5"></div>	
+							<button type="button" class="width-25 pull-right btn btn-sm" id="resetTicketBtn" name="resetTicketBtn" data-dismiss="modal">
+								<i class="ace-icon fa fa-refresh"></i>
+								<span class="bigger-110">Close</span>
+							</button>
+
+							<button type="button" class="width-25 pull-right btn btn-sm btn-success" id="submitTicketBtn" name="submitTicketBtn">
+								<span class="bigger-110">Register</span>
+								<i class="ace-icon fa fa-arrow-right icon-on-right"></i>
+							</button>
+						</div>
+					</fieldset>
+				</form>
+			<!--</div>-->
+		</div>
+	</div>
+</div>
+<script src="../assets/customjs/ticketing.js"></script>
+<!-- jQuery Tags Input -->
+<script src="../assets/customjs/jquery.tagsinput.js"></script>
+<script src="../assets/js/jquery-ui.custom.min.js"></script>
+<script src="../assets/js/chosen.jquery.min.js"></script>
+
+
+<script type="text/javascript">
+	CKEDITOR.replace('description');
+	$('.date-picker').datepicker({
+		autoclose: true,
+		todayHighlight: true
+	})
+</script>
+
+
