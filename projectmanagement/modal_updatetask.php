@@ -273,7 +273,7 @@ while($row = mysqli_fetch_assoc($myresult)){
 								</div>	
 							</div>
 							<div class="col-lg-6">
-								<a class="width-55 pull-right btn btn-sm btn-danger" href="modalnewpage.php?taskId=<?php echo $taskId; ?>" id="openThread">
+								<a class="width-55 pull-right btn btn-sm btn-danger" href="test.php?taskId=<?php echo $taskId; ?>" id="openThread">
 									Open Thread<i class="ace-icon fa fa-arrow-right icon-on-right"></i>
 								</a>
 							</div>
