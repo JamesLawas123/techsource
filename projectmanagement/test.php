@@ -1065,9 +1065,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
-
-// ... existing code ...
-
 <?php
 // Fetch task data from database
 $task_id = 1; // Replace with your actual task ID or dynamic query
@@ -1085,94 +1082,103 @@ if (!$task_result) {
 if (mysqli_num_rows($task_result) > 0) {
     $task = mysqli_fetch_assoc($task_result);
 ?>
-<table class="table table-bordered table-striped">
-    <thead>
-        <tr>
-            <th>Field</th>
-            <th>Value</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Tracker</td>
-            <td><?php echo htmlspecialchars($task['subject'] ?? 'N/A'); ?></td>
-        </tr>
-        <tr>
-            <td>Status</td>
-            <td>
-                <?php 
-                // Map status ID to text
-                $statusText = 'N/A';
-                switch($task['statusid'] ?? 0) {
-                    case 1: $statusText = 'Open'; break;
-                    case 2: $statusText = 'In Progress'; break;
-                    case 3: $statusText = 'Resolved'; break;
-                    case 4: $statusText = 'Closed'; break;
+<div class="profile-user-info profile-user-info-striped">
+    <div class="profile-info-row">
+        <div class="profile-info-name"> Tracker </div>
+        <div class="profile-info-value">
+            <span class="editable" id="tracker"><?php echo htmlspecialchars($task['subject'] ?? 'N/A'); ?></span>
+        </div>
+    </div>
+
+    <div class="profile-info-row">
+        <div class="profile-info-name"> Status </div>
+        <div class="profile-info-value">
+            <?php 
+            // Map status ID to text
+            $statusText = 'N/A';
+            switch($task['statusid'] ?? 0) {
+                case 1: $statusText = 'Open'; break;
+                case 2: $statusText = 'In Progress'; break;
+                case 3: $statusText = 'Resolved'; break;
+                case 4: $statusText = 'Closed'; break;
+            }
+            echo '<span class="editable" id="status">' . htmlspecialchars($statusText) . '</span>';
+            ?>
+        </div>
+    </div>
+
+    <div class="profile-info-row">
+        <div class="profile-info-name"> Priority </div>
+        <div class="profile-info-value">
+            <?php 
+            // Map priority ID to text
+            $priorityText = 'N/A';
+            switch($task['priorityid'] ?? 0) {
+                case 1: $priorityText = 'Low'; break;
+                case 2: $priorityText = 'Normal'; break;
+                case 3: $priorityText = 'High'; break;
+                case 4: $priorityText = 'Urgent'; break;
+            }
+            echo '<span class="editable" id="priority">' . htmlspecialchars($priorityText) . '</span>';
+            ?>
+        </div>
+    </div>
+
+    <div class="profile-info-row">
+        <div class="profile-info-name"> Subject </div>
+        <div class="profile-info-value">
+            <span class="editable" id="subject"><?php echo htmlspecialchars($task['subject'] ?? 'N/A'); ?></span>
+        </div>
+    </div>
+
+    <div class="profile-info-row">
+        <div class="profile-info-name"> Assignee </div>
+        <div class="profile-info-value">
+            <span class="editable" id="assignee"><?php echo htmlspecialchars($task['assignee'] ?? 'N/A'); ?></span>
+        </div>
+    </div>
+
+    <div class="profile-info-row">
+        <div class="profile-info-name"> Project </div>
+        <div class="profile-info-value">
+            <?php 
+            // Fetch project name based on projectid
+            $projectName = 'N/A';
+            if (!empty($task['projectid'])) {
+                $project_sql = "SELECT name FROM pm_projecttb WHERE id = " . intval($task['projectid']);
+                $project_result = mysqli_query($mysqlconn, $project_sql);
+                
+                if ($project_result && mysqli_num_rows($project_result) > 0) {
+                    $project = mysqli_fetch_assoc($project_result);
+                    $projectName = htmlspecialchars($project['name']);
                 }
-                echo htmlspecialchars($statusText);
-                ?>
-            </td>
-        </tr>
-        <tr>
-            <td>Priority</td>
-            <td>
-                <?php 
-                // Map priority ID to text
-                $priorityText = 'N/A';
-                switch($task['priorityid'] ?? 0) {
-                    case 1: $priorityText = 'Low'; break;
-                    case 2: $priorityText = 'Normal'; break;
-                    case 3: $priorityText = 'High'; break;
-                    case 4: $priorityText = 'Urgent'; break;
-                }
-                echo htmlspecialchars($priorityText);
-                ?>
-            </td>
-        </tr>
-        <tr>
-            <td>Subject</td>
-            <td><?php echo htmlspecialchars($task['subject'] ?? 'N/A'); ?></td>
-        </tr>
-        <tr>
-            <td>Assignee</td>
-            <td><?php echo htmlspecialchars($task['assignee'] ?? 'N/A'); ?></td>
-        </tr>
-        <tr>
-            <td>Project</td>
-            <td>
-                <?php 
-                // Fetch project name based on projectid
-                $projectName = 'N/A';
-                if (!empty($task['projectid'])) {
-                    $project_sql = "SELECT name FROM pm_projecttb WHERE id = " . intval($task['projectid']);
-                    $project_result = mysqli_query($mysqlconn, $project_sql);
-                    
-                    if ($project_result && mysqli_num_rows($project_result) > 0) {
-                        $project = mysqli_fetch_assoc($project_result);
-                        $projectName = htmlspecialchars($project['name']);
-                    }
-                }
-                echo $projectName;
-                ?>
-            </td>
-        </tr>
-        <tr>
-            <td>Deadline</td>
-            <td><?php echo !empty($task['deadline']) ? htmlspecialchars(date('Y-m-d', strtotime($task['deadline']))) : 'N/A'; ?></td>
-        </tr>
-        <tr>
-            <td>Note</td>
-            <td><?php echo htmlspecialchars($task['description'] ?? 'N/A'); ?></td>
-        </tr>
-    </tbody>
-</table>
+            }
+            echo '<span class="editable" id="project">' . $projectName . '</span>';
+            ?>
+        </div>
+    </div>
+
+    <div class="profile-info-row">
+        <div class="profile-info-name"> Deadline </div>
+        <div class="profile-info-value">
+            <span class="editable" id="deadline"><?php echo !empty($task['deadline']) ? htmlspecialchars(date('Y-m-d', strtotime($task['deadline']))) : 'N/A'; ?></span>
+        </div>
+    </div>
+
+    <div class="profile-info-row">
+        <div class="profile-info-name"> Note </div>
+        <div class="profile-info-value">
+            <span class="editable" id="note"><?php echo htmlspecialchars($task['description'] ?? 'N/A'); ?></span>
+        </div>
+    </div>
+</div>
 <?php
 } else {
     echo '<div class="alert alert-warning">No task found with ID: ' . $task_id . '</div>';
 }
 ?>
 
-// ... existing code ...
+
 
 											<div class="space-20"></div>
 
