@@ -1,5 +1,6 @@
 <?php
 include('../conn/db.php');
+session_start(); // Start session to access user data
 
 function addComment($mysqlconn, $taskId, $userId, $message, $subject = '') {
     // Validate inputs
@@ -34,15 +35,20 @@ function addComment($mysqlconn, $taskId, $userId, $message, $subject = '') {
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $taskId = isset($_POST['taskId']) ? intval($_POST['taskId']) : 0; // Get taskId from POST
-    $userId = 1; // Replace with actual user ID from session
+    $taskId = isset($_POST['taskId']) ? intval($_POST['taskId']) : 0;
+    $userId = $_SESSION['userid'] ?? 0; // Get user ID from session
     $message = $_POST['message'] ?? '';
-    $subject = $_POST['subject'] ?? ''; // Get subject from form
+    $subject = $_POST['subject'] ?? '';
+
+    // Validate user ID
+    if ($userId === 0) {
+        die('User not logged in');
+    }
 
     $result = addComment($mysqlconn, $taskId, $userId, $message, $subject);
     
     if ($result['status'] === 'success') {
-        header('Location: test.php?taskId=' . $taskId); // Add taskId to redirect URL
+        header('Location: test.php?taskId=' . $taskId);
         exit();
     } else {
         // Handle error - you could set a session error message and redirect

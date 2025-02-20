@@ -2,7 +2,7 @@
 // Add this at the top of your file
 include('../conn/db.php');
 include('../check_session.php');
-$user_id = $_SESSION['userid'] ?? 0; // Use 0 as fallback if not set
+$user_id = 1; // Replace with your actual user ID
 $sql = "SELECT * FROM sys_usertb WHERE id = $user_id";
 $result = mysqli_query($mysqlconn, $sql);
 $user = mysqli_fetch_assoc($result);
@@ -24,42 +24,6 @@ switch($user['user_statusid'] ?? 1) {
         break;
 }
 ?>
-
-<?php
-// Define time_elapsed_string function first
-function time_elapsed_string($datetime) {
-    $now = time();
-    $created = strtotime($datetime);
-    $diff = $now - $created;
-
-    if ($diff < 60) {
-        return 'just now';
-    } elseif ($diff < 3600) {
-        return floor($diff / 60) . ' minutes ago';
-    } elseif ($diff < 86400) {
-        return floor($diff / 3600) . ' hours ago';
-    } else {
-        return floor($diff / 86400) . ' days ago';
-    }
-}
-
-// Fetch task data from database
-$task_id = isset($_GET['taskId']) ? intval($_GET['taskId']) : 0;
-$task_sql = "SELECT * FROM pm_projecttasktb WHERE id = $task_id";
-
-// Execute query with error handling
-$task_result = mysqli_query($mysqlconn, $task_sql);
-
-if (!$task_result) {
-    die('SQL Error: ' . mysqli_error($mysqlconn));
-}
-
-// Check if any rows were returned
-if (mysqli_num_rows($task_result) > 0) {
-    $task = mysqli_fetch_assoc($task_result);
-?>
-
-
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -1050,38 +1014,7 @@ if (mysqli_num_rows($task_result) > 0) {
 
 						<div class="page-header">
 							<h1>
-								Thread Page	
-								<small>
-									<i class="ace-icon fa fa-angle-double-right"></i>
-
-									<span class="editable" id="istask">
-										<?php 
-										$istaskValue = $task['istask'] ?? 0;
-										echo htmlspecialchars($istaskValue == 1 ? 'Assignment' : ($istaskValue == 2 ? 'Ticket' : 'N/A')); 
-										?>
-									</span>
-
-									<span class="editable" id="statusTask">
-										<?php
-										$statusName = 'N/A';
-										if (!empty($task['statusid'])) {
-											$status_sql = "SELECT statusname FROM sys_taskstatustb WHERE id = " . intval($task['statusid']);
-											$status_result = mysqli_query($mysqlconn, $status_sql);
-											
-											if ($status_result && mysqli_num_rows($status_result) > 0) {
-												$status = mysqli_fetch_assoc($status_result);
-												$statusName = '(' . htmlspecialchars($status['statusname']) . ')'; // Add parentheses here
-											}
-										}
-										echo $statusName;
-										?>
-									</span>
-
-								</small>
-								<small>
-									<i class="ace-icon fa fa-angle-double-right"></i>
-									<span class="editable" id="subject"><?php echo htmlspecialchars($task['subject'] ?? 'N/A'); ?></span>
-								</small>						
+								Thread Page							
 							</h1>
 						</div><!-- /.page-header -->
 							
@@ -1128,34 +1061,83 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 
+<?php
+// Define time_elapsed_string function first
+function time_elapsed_string($datetime) {
+    $now = time();
+    $created = strtotime($datetime);
+    $diff = $now - $created;
 
+    if ($diff < 60) {
+        return 'just now';
+    } elseif ($diff < 3600) {
+        return floor($diff / 60) . ' minutes ago';
+    } elseif ($diff < 86400) {
+        return floor($diff / 3600) . ' hours ago';
+    } else {
+        return floor($diff / 86400) . ' days ago';
+    }
+}
+
+// Fetch task data from database
+$task_id = isset($_GET['taskId']) ? intval($_GET['taskId']) : 0;
+$task_sql = "SELECT * FROM pm_projecttasktb WHERE id = $task_id";
+
+// Execute query with error handling
+$task_result = mysqli_query($mysqlconn, $task_sql);
+
+if (!$task_result) {
+    die('SQL Error: ' . mysqli_error($mysqlconn));
+}
+
+// Check if any rows were returned
+if (mysqli_num_rows($task_result) > 0) {
+    $task = mysqli_fetch_assoc($task_result);
+?>
 <div class="row">
     <!-- Left Column - Task Details -->
     <div class="col-md-6">
         <div class="profile-user-info profile-user-info-striped">
-
-
-		<div class="profile-info-row">
-                <div class="profile-info-name"> Project Owner </div>
+            <div class="profile-info-row">
+                <div class="profile-info-name"> Tracker </div>
                 <div class="profile-info-value">
                     <?php 
-                    $projectName = 'N/A';
-                    if (!empty($task['projectid'])) {
-                        $project_sql = "SELECT projectname FROM sys_projecttb WHERE id = " . intval($task['projectid']);
-                        $project_result = mysqli_query($mysqlconn, $project_sql);
+                    $trackerName = 'N/A';
+                    if (!empty($task['classificationid'])) {
+                        $tracker_sql = "SELECT classification FROM sys_taskclassificationtb WHERE id = " . intval($task['classificationid']);
+                        $tracker_result = mysqli_query($mysqlconn, $tracker_sql);
                         
-                        if ($project_result && mysqli_num_rows($project_result) > 0) {
-                            $project = mysqli_fetch_assoc($project_result);
-                            $projectName = htmlspecialchars($project['projectname']);
+                        if ($tracker_result && mysqli_num_rows($tracker_result) > 0) {
+                            $tracker = mysqli_fetch_assoc($tracker_result);
+                            $trackerName = htmlspecialchars($tracker['classification']);  
                         }
                     }
-                    echo '<span class="editable" id="project">' . $projectName . '</span>';
+                    echo '<span class="editable" id="tracker">' . $trackerName . '</span>';
                     ?>
                 </div>
             </div>
 
-			<div class="profile-info-row">
-                <div class="profile-info-name"> Priority Level</div>
+            <div class="profile-info-row">
+                <div class="profile-info-name"> Status </div>
+                <div class="profile-info-value">
+                    <?php 
+                    $statusName = 'N/A';
+                    if (!empty($task['statusid'])) {
+                        $status_sql = "SELECT statusname FROM sys_taskstatustb WHERE id = " . intval($task['statusid']);
+                        $status_result = mysqli_query($mysqlconn, $status_sql);
+                        
+                        if ($status_result && mysqli_num_rows($status_result) > 0) {
+                            $status = mysqli_fetch_assoc($status_result);
+                            $statusName = htmlspecialchars($status['statusname']);  
+                        }
+                    }
+                    echo '<span class="editable" id="status">' . $statusName . '</span>';
+                    ?>
+                </div>
+            </div>
+
+            <div class="profile-info-row">
+                <div class="profile-info-name"> Priority </div>
                 <div class="profile-info-value">
                     <?php 
                     $priorityName = 'N/A';
@@ -1163,7 +1145,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         $priority_sql = "SELECT priorityname FROM sys_priorityleveltb WHERE id = " . intval($task['priorityid']);
                         $priority_result = mysqli_query($mysqlconn, $priority_sql);
                         
-                        if ($priority_result && mysqli_num_rows($priority_result) > 0) {  // Changed from $status_result to $priority_result
+                        if ($status_result && mysqli_num_rows($priority_result) > 0) {
                             $priority = mysqli_fetch_assoc($priority_result);
                             $priorityName = htmlspecialchars($priority['priorityname']);  
                         }
@@ -1173,7 +1155,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
 
-            
+            <div class="profile-info-row">
+                <div class="profile-info-name"> Subject </div>
+                <div class="profile-info-value">
+                    <span class="editable" id="subject"><?php echo htmlspecialchars($task['subject'] ?? 'N/A'); ?></span>
+                </div>
+            </div>
 
             <div class="profile-info-row">
                 <div class="profile-info-name"> Assignee </div>
@@ -1205,83 +1192,43 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
 
-			<div class="profile-info-row">
-                <div class="profile-info-name"> Target Date </div>
+            <div class="profile-info-row">
+                <div class="profile-info-name"> Project </div>
+                <div class="profile-info-value">
+                    <?php 
+                    $projectName = 'N/A';
+                    if (!empty($task['projectid'])) {
+                        $project_sql = "SELECT projectname FROM sys_projecttb WHERE id = " . intval($task['projectid']);
+                        $project_result = mysqli_query($mysqlconn, $project_sql);
+                        
+                        if ($project_result && mysqli_num_rows($project_result) > 0) {
+                            $project = mysqli_fetch_assoc($project_result);
+                            $projectName = htmlspecialchars($project['projectname']);
+                        }
+                    }
+                    echo '<span class="editable" id="project">' . $projectName . '</span>';
+                    ?>
+                </div>
+            </div>
+
+            <div class="profile-info-row">
+                <div class="profile-info-name"> Deadline </div>
                 <div class="profile-info-value">
                     <span class="editable" id="deadline"><?php echo !empty($task['deadline']) ? htmlspecialchars(date('Y-m-d', strtotime($task['deadline']))) : 'N/A'; ?></span>
                 </div>
             </div>
 
-			<div class="profile-info-row">
-                <div class="profile-info-name"> Start Date </div>
-                <div class="profile-info-value">
-                    <span class="editable" id="startdate"><?php echo !empty($task['startdate']) ? htmlspecialchars(date('Y-m-d', strtotime($task['startdate']))) : 'N/A'; ?></span>
-                </div>
-            </div>
-
-			<div class="profile-info-row">
-                <div class="profile-info-name"> Actual End Date </div>
-                <div class="profile-info-value">
-                    <span class="editable" id="enddate"><?php echo !empty($task['enddate']) ? htmlspecialchars(date('Y-m-d', strtotime($task['enddate']))) : 'N/A'; ?></span>
-                </div>
-            </div>
-
-			<div class="profile-info-row">
-                <div class="profile-info-name"> Task Status </div>
-                <div class="profile-info-value">
-                    <?php 
-                    $statusName = 'N/A';
-                    if (!empty($task['statusid'])) {
-                        $status_sql = "SELECT statusname FROM sys_taskstatustb WHERE id = " . intval($task['statusid']);
-                        $status_result = mysqli_query($mysqlconn, $status_sql);
-                        
-                        if ($status_result && mysqli_num_rows($status_result) > 0) {
-                            $status = mysqli_fetch_assoc($status_result);
-                            $statusName = htmlspecialchars($status['statusname']);  
-                        }
-                    }
-                    echo '<span class="editable" id="status">' . $statusName . '</span>';
-                    ?>
-                </div>
-            </div>
-
             <div class="profile-info-row">
-                <div class="profile-info-name"> Classification </div>
+                <div class="profile-info-name"> Note </div>
                 <div class="profile-info-value">
-                    <?php 
-                    $trackerName = 'N/A';
-                    if (!empty($task['classificationid'])) {
-                        $tracker_sql = "SELECT classification FROM sys_taskclassificationtb WHERE id = " . intval($task['classificationid']);
-                        $tracker_result = mysqli_query($mysqlconn, $tracker_sql);
-                        
-                        if ($tracker_result && mysqli_num_rows($tracker_result) > 0) {
-                            $tracker = mysqli_fetch_assoc($tracker_result);
-                            $trackerName = htmlspecialchars($tracker['classification']);  
-                        }
-                    }
-                    echo '<span class="editable" id="tracker">' . $trackerName . '</span>';
-                    ?>
-                </div>
-            </div>
-
-			<div class="profile-info-row">
-                <div class="profile-info-name"> Subject </div>
-                <div class="profile-info-value">
-                    <span class="editable" id="subject"><?php echo htmlspecialchars($task['subject'] ?? 'N/A'); ?></span>
-                </div>
-            </div>
-
-            <div class="profile-info-row">
-                <div class="profile-info-name"> Description </div>
-                <div class="profile-info-value">
-                    <span class="editable" id="description"><?php echo strip_tags($task['description'] ?? 'N/A'); ?></span>
+                    <span class="editable" id="note"><?php echo strip_tags($task['description'] ?? 'N/A'); ?></span>
                 </div>
             </div>
         </div>
     </div>
 
-        <!-- Right Column - Thread -->
-		<div class="col-md-6">
+    <!-- Right Column - Thread -->
+    <div class="col-md-6">
         <div class="widget-box transparent">
             <div class="widget-header widget-header-small">
                 <h4 class="widget-title blue smaller">
@@ -1289,7 +1236,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     Thread
                 </h4>
                 <div class="widget-toolbar action-buttons">
-                    <a href="#" id="refreshButton">
+                    <a href="#" data-action="reload">
                         <i class="ace-icon fa fa-refresh blue"></i>
                     </a>
                 </div>
@@ -1313,7 +1260,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     <div class="space-12"></div>
 
-                    <div id="profile-feed-1" class="profile-feed" style="max-height: 400px; overflow-y: auto;">
+                    <div id="profile-feed-1" class="profile-feed">
                         <?php
                         $sql = "SELECT t.*, u.username 
                                 FROM pm_threadtb t
@@ -1339,29 +1286,20 @@ document.addEventListener('DOMContentLoaded', function() {
                                     </div>';
                             }
                         } else {
-                            echo '<div class="alert alert-info">No messages yet for this task.</div>';
+                            echo '<div class="alert alert-info">No comments found for this task.</div>';
                         }
                         ?>
                     </div>
                 </div>
             </div>
-
-            <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-            <script>
-            $(document).ready(function() {
-                // Refresh button click handler
-                $('#refreshButton').click(function(e) {
-                    e.preventDefault(); // Prevent default link behavior
-                    location.reload(); // Refresh the page
-                });
-            });
-            </script>
-            <?php
-            } else {
-                echo '<div class="alert alert-warning">No task found with ID: ' . $task_id . '</div>';
-            }
-            ?>
-
+        </div>
+    </div>
+</div>
+<?php
+} else {
+    echo '<div class="alert alert-warning">No task found with ID: ' . $task_id . '</div>';
+}
+?>
 
 
                                              </div>   
