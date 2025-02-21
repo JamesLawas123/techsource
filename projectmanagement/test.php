@@ -1280,87 +1280,134 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </div>
 
-        <!-- Right Column - Thread -->
-		<div class="col-md-6">
-        <div class="widget-box transparent">
-            <div class="widget-header widget-header-small">
-                <h4 class="widget-title blue smaller">
-                    <i class="ace-icon fa fa-rss orange"></i>
-                    Thread
-                </h4>
-                <div class="widget-toolbar action-buttons">
-                    <a href="#" id="refreshButton">
-                        <i class="ace-icon fa fa-refresh blue"></i>
-                    </a>
+	<div class="col-md-6">
+    <div class="widget-box transparent">
+        <div class="widget-header widget-header-small">
+            <h4 class="widget-title blue smaller">
+                <i class="ace-icon fa fa-rss orange"></i>
+                Thread
+            </h4>
+            <div class="widget-toolbar action-buttons">
+                <a href="#" id="refreshButton">
+                    <i class="ace-icon fa fa-refresh blue"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="widget-body">
+            <div class="widget-main padding-8">
+                <div class="comment-form">
+                    <form id="commentForm" method="POST" action="add_comments.php">
+                        <div class="form-group">
+                            <input type="hidden" name="taskId" value="<?php echo $task_id; ?>">
+                            <input type="hidden" name="subject" value="<?php echo htmlspecialchars($task['subject'] ?? ''); ?>">
+                            <textarea class="form-control" name="message" rows="3" placeholder="Write your message..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-sm btn-primary">
+                            <i class="ace-icon fa fa-paper-plane"></i>
+                            Send
+                        </button>
+                    </form>
+                </div>
+
+                <div class="space-12"></div>
+
+                <div id="profile-feed-1" class="profile-feed" style="max-height: 400px; overflow-y: auto;">
+                    <!-- Comments will be loaded here -->
                 </div>
             </div>
+        </div>
 
-            <div class="widget-body">
-                <div class="widget-main padding-8">
-                    <div class="comment-form">
-                        <form id="commentForm" method="POST" action="add_comments.php">
-                            <div class="form-group">
-                                <input type="hidden" name="taskId" value="<?php echo $task_id; ?>">
-                                <input type="hidden" name="subject" value="<?php echo htmlspecialchars($task['subject'] ?? ''); ?>">
-                                <textarea class="form-control" name="message" rows="3" placeholder="Write your message..." required></textarea>
-                            </div>
-                            <button type="submit" class="btn btn-sm btn-primary">
-                                <i class="ace-icon fa fa-paper-plane"></i>
-                                Send
-                            </button>
-                        </form>
-                    </div>
+        <script>
+        $(document).ready(function() {
+            const taskId = <?php echo $task_id; ?>;
+            let isPolling = true;
 
-                    <div class="space-12"></div>
-
-                    <div id="profile-feed-1" class="profile-feed" style="max-height: 400px; overflow-y: auto;">
-                        <?php
-                        $sql = "SELECT t.*, u.username 
-                                FROM pm_threadtb t
-                                JOIN sys_usertb u ON t.createdbyid = u.id
-                                WHERE t.taskid = $task_id
-                                ORDER BY t.datetimecreated DESC";
-                        $result = mysqli_query($mysqlconn, $sql);
-                        
-                        if (mysqli_num_rows($result) > 0) {
-                            while ($row = mysqli_fetch_assoc($result)) {
-                                echo '<div class="profile-activity clearfix">
+            // Function to load comments
+            function loadComments() {
+                $.ajax({
+                    url: 'get_comments.php',
+                    data: { taskId: taskId },
+                    method: 'GET',
+                    success: function(comments) {
+                        let html = '';
+                        if (comments.length > 0) {
+                            comments.forEach(function(comment) {
+                                html += `
+                                    <div class="profile-activity clearfix">
                                         <div>
-                                            <img class="pull-left" alt="'.$row['username'].'\'s avatar" src="../assets/images/avatars/avatar5.png" />
+                                            <img class="pull-left" alt="${comment.username}'s avatar" src="../assets/images/avatars/avatar5.png" />
                                             <div style="display: flex; align-items: center; gap: 8px;">
-                                                <a class="user" href="#" style="font-weight: 600; color: #2a6496; text-decoration: none;">'.$row['username'].'</a>
-                                                <div class="comment-text" style="margin: 0; font-size: 14px; line-height: 1.5; color: #555;">'.$row['message'].'</div>
+                                                <a class="user" href="#" style="font-weight: 600; color: #2a6496; text-decoration: none;">${comment.username}</a>
+                                                <div class="comment-text" style="margin: 0; font-size: 14px; line-height: 1.5; color: #555;">${comment.message}</div>
                                             </div>
                                             <div class="time" style="font-size: 10px; color: #999; font-weight: 1000;">
                                                 <i class="ace-icon fa fa-clock-o"></i>
-                                                '.time_elapsed_string($row['datetimecreated']).'
+                                                ${comment.time}
                                             </div>
                                         </div>
-                                    </div>';
-                            }
+                                    </div>
+                                `;
+                            });
                         } else {
-                            echo '<div class="alert alert-info">No messages yet for this task.</div>';
+                            html = '<div class="alert alert-info">No messages yet for this task.</div>';
                         }
-                        ?>
-                    </div>
-                </div>
-            </div>
+                        $('#profile-feed-1').html(html);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error fetching comments:', error);
+                    }
+                });
+            }
 
-            <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-            <script>
-            $(document).ready(function() {
-                // Refresh button click handler
-                $('#refreshButton').click(function(e) {
-                    e.preventDefault(); // Prevent default link behavior
-                    location.reload(); // Refresh the page
+            // Initial load
+            loadComments();
+
+            // Set up polling every 5 seconds
+            const pollInterval = setInterval(function() {
+                if (isPolling) {
+                    loadComments();
+                }
+            }, 5000);
+
+            // Handle form submission
+            $('#commentForm').on('submit', function(e) {
+                e.preventDefault();
+                $.ajax({
+                    url: $(this).attr('action'),
+                    method: 'POST',
+                    data: $(this).serialize(),
+                    success: function(response) {
+                        // Clear the textarea
+                        $('textarea[name="message"]').val('');
+                        // Immediately load new comments
+                        loadComments();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error posting comment:', error);
+                        alert('Error posting comment. Please try again.');
+                    }
                 });
             });
-            </script>
-            <?php
-            } else {
-                echo '<div class="alert alert-warning">No task found with ID: ' . $task_id . '</div>';
-            }
-            ?>
+
+            // Refresh button handler
+            $('#refreshButton').click(function(e) {
+                e.preventDefault();
+                loadComments();
+            });
+
+            // Clean up when leaving the page
+            $(window).on('beforeunload', function() {
+                isPolling = false;
+                clearInterval(pollInterval);
+            });
+        });
+        </script>
+        <?php
+        } else {
+            echo '<div class="alert alert-warning">No task found with ID: ' . $task_id . '</div>';
+        }
+        ?>
 
 
 
@@ -1373,7 +1420,7 @@ document.addEventListener('DOMContentLoaded', function() {
 											<div class="space-6"></div>
 											
 <!-- ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// -->
-<div style="position: fixed; bottom: 80px; width: 95%; text-align: center;">
+<div style=" bottom: 80px; width: 98%; text-align: center;">
     <button type="button" class="btn btn-sm btn-primary btn-white btn-round">
         <i class="ace-icon fa fa-rss bigger-150 middle orange2"></i>
         <span class="bigger-110">View more activities</span>

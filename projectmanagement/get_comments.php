@@ -1,25 +1,42 @@
 <?php
 include('../conn/db.php');
 
+function time_elapsed_string($datetime) {
+    $now = time();
+    $created = strtotime($datetime);
+    $diff = $now - $created;
 
-$taskId = $_GET['taskId'];
-$response = ['messages' => []];
+    if ($diff < 60) {
+        return 'just now';
+    } elseif ($diff < 3600) {
+        return floor($diff / 60) . ' minutes ago';
+    } elseif ($diff < 86400) {
+        return floor($diff / 3600) . ' hours ago';
+    } else {
+        return floor($diff / 86400) . ' days ago';
+    }
+}
+
+$task_id = isset($_GET['taskId']) ? intval($_GET['taskId']) : 0;
 
 $sql = "SELECT t.*, u.username 
         FROM pm_threadtb t
         JOIN sys_usertb u ON t.createdbyid = u.id
-        WHERE t.taskid = $taskId
+        WHERE t.taskid = $task_id
         ORDER BY t.datetimecreated DESC";
 $result = mysqli_query($mysqlconn, $sql);
 
-while ($row = mysqli_fetch_assoc($result)) {
-    $response['messages'][] = [
-        'username' => $row['username'],
-        'message' => $row['message'],
-        'datetimecreated' => time_elapsed_string($row['datetimecreated'])
-    ];
+$comments = array();
+if (mysqli_num_rows($result) > 0) {
+    while ($row = mysqli_fetch_assoc($result)) {
+        $comments[] = array(
+            'username' => $row['username'],
+            'message' => $row['message'],
+            'time' => time_elapsed_string($row['datetimecreated'])
+        );
+    }
 }
 
 header('Content-Type: application/json');
-echo json_encode($response);
+echo json_encode($comments);
 ?>
