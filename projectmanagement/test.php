@@ -1325,40 +1325,55 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Function to load comments
             function loadComments() {
-                $.ajax({
-                    url: 'get_comments.php',
-                    data: { taskId: taskId },
-                    method: 'GET',
-                    success: function(comments) {
-                        let html = '';
-                        if (comments.length > 0) {
-                            comments.forEach(function(comment) {
-                                html += `
-                                    <div class="profile-activity clearfix">
-                                        <div>
-                                            <img class="pull-left" alt="${comment.username}'s avatar" src="../assets/images/avatars/avatar5.png" />
-                                            <div style="display: flex; align-items: center; gap: 8px;">
-                                                <a class="user" href="#" style="font-weight: 600; color: #2a6496; text-decoration: none;">${comment.username}</a>
-                                                <div class="comment-text" style="margin: 0; font-size: 14px; line-height: 1.5; color: #555;">${comment.message}</div>
-                                            </div>
-                                            <div class="time" style="font-size: 10px; color: #999; font-weight: 1000;">
-                                                <i class="ace-icon fa fa-clock-o"></i>
-                                                ${comment.time}
-                                            </div>
-                                        </div>
-                                    </div>
-                                `;
-                            });
-                        } else {
-                            html = '<div class="alert alert-info">No messages yet for this task.</div>';
-                        }
-                        $('#profile-feed-1').html(html);
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('Error fetching comments:', error);
-                    }
-                });
+    $.ajax({
+        url: 'get_comments.php',
+        data: { taskId: taskId },
+        method: 'GET',
+        success: function(comments) {
+            let html = '';
+            if (comments.length > 0) {
+                html = buildCommentHtml(comments);
+            } else {
+                html = '<div class="alert alert-info">No messages yet for this task.</div>';
             }
+            $('#profile-feed-1').html(html);
+        },
+        error: function(xhr, status, error) {
+            console.error('Error fetching comments:', error);
+        }
+    });
+}
+
+function buildCommentHtml(comments, level = 0) {
+    let html = '';
+    comments.forEach(function(comment) {
+        html += `
+            <div class="profile-activity clearfix" style="margin-left: ${level * 20}px; position: relative;">
+                <div style="position: relative;">
+                    <img class="pull-left" alt="${comment.username}'s avatar" src="../assets/images/avatars/avatar5.png" />
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <a class="user" href="#" style="font-weight: 600; color: #2a6496; text-decoration: none;">${comment.username}</a>
+                        <div class="comment-text" style="margin: 0; font-size: 14px; line-height: 1.5; color: #555;">${comment.message}</div>
+                    </div>
+                    <div class="time" style="font-size: 10px; color: #999; font-weight: 1000;">
+                        <i class="ace-icon fa fa-clock-o"></i>
+                        ${comment.time}
+                        ${comment.parent_id ? '<span class="reply-indicator" style="margin-left: 8px; color: #666; font-size: 10px;"> Replied</span>' : ''}
+                        <a href="#" class="reply-btn" data-comment-id="${comment.id}" style="margin-left: 8px; padding: 0 4px; background: transparent; border: none; color: #999;">
+                            <i class="ace-icon fa fa-reply" style="font-size: 10px;"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        `;
+        if (comment.replies && comment.replies.length > 0) {
+            // Sort replies by datetimecreated DESC to show latest replies first
+            comment.replies.sort((a, b) => new Date(b.datetimecreated) - new Date(a.datetimecreated));
+            html += buildCommentHtml(comment.replies, level + 1);
+        }
+    });
+    return html;
+}
 
             // Initial load
             loadComments();
@@ -1380,6 +1395,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     success: function(response) {
                         // Clear the textarea
                         $('textarea[name="message"]').val('');
+                        // Remove parent comment ID if set
+                        $('input[name="parent_comment_id"]').remove();
                         // Immediately load new comments
                         loadComments();
                     },
@@ -1388,6 +1405,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         alert('Error posting comment. Please try again.');
                     }
                 });
+            });
+
+            // Reply button handler
+            $('#profile-feed-1').on('click', '.reply-btn', function(e) {
+                e.preventDefault();
+                const commentId = $(this).data('comment-id');
+                const username = $(this).closest('.profile-activity').find('.user').text();
+                $('textarea[name="message"]').val(`@${username} `).focus();
+                $('input[name="parent_comment_id"]').remove();
+                $('#commentForm').append(`<input type="hidden" name="parent_comment_id" value="${commentId}">`);
             });
 
             // Refresh button handler
