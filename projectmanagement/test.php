@@ -1134,7 +1134,29 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="col-md-6">
         <div class="profile-user-info profile-user-info-striped">
 
+		
+        <div class="page-header">
+            <h1 style="display: flex; align-items: center; gap: 8px;">
+                <span>Subject</span>
+                <i class="ace-icon fa fa-angle-double-right"></i>
+                <span style="display: inline-block;"><?php echo htmlspecialchars($task['subject'] ?? 'N/A'); ?></span>
+            </h1>
+        </div>
 
+			<div class="profile-info-row">
+                <div class="profile-info-name"> Ticket ID </div>
+                <div class="profile-info-value">
+                    <span class="editable" id="ticketID"><?php echo htmlspecialchars($task['id'] ?? 'N/A'); ?></span>
+                </div>
+            </div>
+
+            <div class="profile-info-row">
+                <div class="profile-info-name"> Description </div>
+                <div class="profile-info-value">
+                    <span class="editable" id="description"><?php echo strip_tags($task['description'] ?? 'N/A'); ?></span>
+                </div>
+            </div>
+			<hr class="hr-8 dotted">
 		<div class="profile-info-row">
                 <div class="profile-info-name"> Project Owner </div>
                 <div class="profile-info-value">
@@ -1264,21 +1286,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
 
-			<div class="profile-info-row">
-                <div class="profile-info-name"> Subject </div>
-                <div class="profile-info-value">
-                    <span class="editable" id="subject"><?php echo htmlspecialchars($task['subject'] ?? 'N/A'); ?></span>
-                </div>
-            </div>
-
-            <div class="profile-info-row">
-                <div class="profile-info-name"> Description </div>
-                <div class="profile-info-value">
-                    <span class="editable" id="description"><?php echo strip_tags($task['description'] ?? 'N/A'); ?></span>
-                </div>
-            </div>
+			
         </div>
+		<!-- <div style="text-align: right; margin-top: 20px;">
+            <button onclick="showUpdateTask('<?php echo $taskId;?>');" 
+                class="btn btn-primary <?php echo $myClass; ?>">
+                Update
+            </button>
+			<button           
+                class="btn btn-success">
+                Save
+            </button>
+        </div> -->
     </div>
+
+	
 
 	<div class="col-md-6">
     <div class="widget-box transparent">
@@ -1287,6 +1309,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 <i class="ace-icon fa fa-rss orange"></i>
                 Thread
             </h4>
+			<div class="widget-toolbar action-buttons">
+                <a href="#" id="uploadButton">
+                    <i class="ace-icon fa fa-upload blue"></i>
+                </a>
+            </div>
             <div class="widget-toolbar action-buttons">
                 <a href="#" id="refreshButton">
                     <i class="ace-icon fa fa-refresh blue"></i>
@@ -1348,7 +1375,7 @@ function buildCommentHtml(comments, level = 0) {
     let html = '';
     comments.forEach(function(comment) {
         html += `
-            <div class="profile-activity clearfix" style="margin-left: ${level * 20}px; position: relative;">
+            <div class="profile-activity clearfix" style="margin-left: ${level * 40}px; position: relative;">
                 <div style="position: relative;">
                     <img class="pull-left" alt="${comment.username}'s avatar" src="../assets/images/avatars/avatar5.png" />
                     <div style="display: flex; align-items: center; gap: 8px;">
@@ -2918,6 +2945,8 @@ function buildCommentHtml(comments, level = 0) {
 			</a>
 		</div><!-- /.main-container -->
 
+		<div id="myModal_updateTask" class="modal container fade" data-width="760" data-replace="true" style="display: none;" data-modal-overflow="true" data-backdrop="false"></div>
+		
 		<!-- basic scripts -->
 
 		<!--[if !IE]> -->
@@ -3372,7 +3401,10 @@ function buildCommentHtml(comments, level = 0) {
 				})
 				$('.input-mask-phone').mask('(999) 999-9999');
 			
-				$('#user-profile-3').find('input[type=file]').ace_file_input('show_file_list', [{type: 'image', name: $('#avatar').attr('src')}]);
+				$('#user-profile-3').find('input[type=file]').ace_file_input('show_file_list', [{
+    type: 'image', 
+    name: '../assets/images/avatars/avatar5.png' // Use a valid path to an existing image
+}]);
 			
 			
 				////////////////////
