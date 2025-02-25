@@ -1325,11 +1325,12 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="widget-main padding-8">
                 <div class="comment-form">
                     <form id="commentForm" method="POST" action="add_comments.php">
-                        <div class="form-group">
-                            <input type="hidden" name="taskId" value="<?php echo $task_id; ?>">
-                            <input type="hidden" name="subject" value="<?php echo htmlspecialchars($task['subject'] ?? ''); ?>">
-                            <textarea class="form-control" name="message" rows="3" placeholder="Write your message..." required></textarea>
-                        </div>
+					<div class="form-group">
+    <input type="hidden" name="taskId" value="<?php echo $task_id; ?>">
+    <input type="hidden" name="subject" value="<?php echo htmlspecialchars($task['subject'] ?? ''); ?>">
+    <textarea class="form-control" name="message" rows="3" placeholder="Write your message..." required></textarea>
+    <input type="file" name="attachment" id="attachment" class="form-control" style="margin-top: 10px;">
+</div>
                         <button type="submit" class="btn btn-sm btn-primary">
                             <i class="ace-icon fa fa-paper-plane"></i>
                             Send
@@ -1374,13 +1375,25 @@ document.addEventListener('DOMContentLoaded', function() {
 function buildCommentHtml(comments, level = 0) {
     let html = '';
     comments.forEach(function(comment) {
+        let fileHtml = '';
+        if (comment.file_data) {
+            const fileName = comment.file_data.split('/').pop();
+            fileHtml = `<a href="${comment.file_data}" target="_blank" class="btn btn-xs btn-info" style="margin-left: 8px;">
+                <i class="ace-icon fa fa-paperclip"></i>
+                ${fileName}
+            </a>`;
+        }
+
         html += `
             <div class="profile-activity clearfix" style="margin-left: ${level * 40}px; position: relative;">
                 <div style="position: relative;">
                     <img class="pull-left" alt="${comment.username}'s avatar" src="../assets/images/avatars/avatar5.png" />
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <a class="user" href="#" style="font-weight: 600; color: #2a6496; text-decoration: none;">${comment.username}</a>
-                        <div class="comment-text" style="margin: 0; font-size: 14px; line-height: 1.5; color: #555;">${comment.message}</div>
+                        <div class="comment-text" style="margin: 0; font-size: 14px; line-height: 1.5; color: #555;">
+                            ${comment.message}
+                            ${fileHtml}
+                        </div>
                     </div>
                     <div class="time" style="font-size: 10px; color: #999; font-weight: 1000;">
                         <i class="ace-icon fa fa-clock-o"></i>
@@ -1414,25 +1427,28 @@ function buildCommentHtml(comments, level = 0) {
 
             // Handle form submission
             $('#commentForm').on('submit', function(e) {
-                e.preventDefault();
-                $.ajax({
-                    url: $(this).attr('action'),
-                    method: 'POST',
-                    data: $(this).serialize(),
-                    success: function(response) {
-                        // Clear the textarea
-                        $('textarea[name="message"]').val('');
-                        // Remove parent comment ID if set
-                        $('input[name="parent_comment_id"]').remove();
-                        // Immediately load new comments
-                        loadComments();
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('Error posting comment:', error);
-                        alert('Error posting comment. Please try again.');
-                    }
-                });
-            });
+    e.preventDefault();
+    
+    var formData = new FormData(this);
+    
+    $.ajax({
+        url: $(this).attr('action'),
+        method: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(response) {
+            $('textarea[name="message"]').val('');
+            $('#attachment').val('');
+            $('input[name="parent_comment_id"]').remove();
+            loadComments();
+        },
+        error: function(xhr, status, error) {
+            console.error('Error posting comment:', error);
+            alert('Error posting comment. Please try again.');
+        }
+    });
+});
 
             // Reply button handler
             $('#profile-feed-1').on('click', '.reply-btn', function(e) {

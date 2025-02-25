@@ -37,7 +37,7 @@ $sql = "SELECT t.*, u.username
         FROM pm_threadtb t
         JOIN sys_usertb u ON t.createdbyid = u.id
         WHERE t.taskid = $task_id
-        ORDER BY t.datetimecreated DESC"; // Changed to DESC for latest comments first
+        ORDER BY t.datetimecreated DESC";
 
 $result = mysqli_query($mysqlconn, $sql);
 
@@ -49,7 +49,8 @@ if (mysqli_num_rows($result) > 0) {
             'parent_id' => $row['parent_id'],
             'username' => $row['username'],
             'message' => $row['message'],
-            'time' => time_elapsed_string($row['datetimecreated'])
+            'time' => time_elapsed_string($row['datetimecreated']),
+            'file_data' => $row['file_data'] // Add this line to include file data
         );
     }
 }
