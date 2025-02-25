@@ -1309,19 +1309,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 <i class="ace-icon fa fa-rss orange"></i>
                 Thread
             </h4>
-			<div class="widget-toolbar action-buttons">
+			<!-- <div class="widget-toolbar action-buttons">
                 <a href="#" id="refreshButton">
                     <i class="ace-icon fa fa-refresh blue"></i>
                 </a>
-            </div>
+            </div> -->
 			<div class="widget-toolbar action-buttons" style="display: flex; align-items: center; gap: 8px;">
-    <label for="attachment" style="cursor: pointer; margin: 0;">
-        <i class="ace-icon fa fa-upload"></i>                
-    </label>
-    <span id="fileNameDisplay" style="font-size: 12px; color: #666; margin-left: 4px;">
-        No files selected
-    </span>
-</div>
+				<label for="attachment" style="cursor: pointer; margin: 0;">
+					<i class="ace-icon fa fa-upload"></i>                
+				</label>
+			</div>
+			<div class="widget-toolbar action-buttons">
+				<span id="fileNameDisplay" style="font-size: 12px; color: #666; margin-left: 4px;">
+				No files selected
+				</span>
+            </div>
+			
             
         </div>
 
@@ -1398,10 +1401,22 @@ function buildCommentHtml(comments, level = 0) {
         let fileHtml = '';
         if (comment.file_data) {
             const fileName = comment.file_data.split('/').pop();
-            fileHtml = `<a href="${comment.file_data}" target="_blank" class="btn btn-xs btn-info" style="margin-left: 8px;">
-                <i class="ace-icon fa fa-paperclip"></i>
-                ${fileName}
-            </a>`;
+            const fileExtension = fileName.split('.').pop().toLowerCase();
+            const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
+            
+            if (imageExtensions.includes(fileExtension)) {
+                fileHtml = `
+                    <div style="margin-top: 8px;">
+                        <img src="${comment.file_data}" alt="Attached Image" 
+                             style="max-width: 100%; max-height: 200px; border-radius: 4px;">
+                    </div>
+                `;
+            } else {
+                fileHtml = `<a href="${comment.file_data}" target="_blank" class="btn btn-xs btn-info" style="margin-left: 8px;">
+                    <i class="ace-icon fa fa-paperclip"></i>
+                    ${fileName}
+                </a>`;
+            }
         }
 
         html += `
@@ -1460,6 +1475,7 @@ function buildCommentHtml(comments, level = 0) {
         success: function(response) {
             $('textarea[name="message"]').val('');
             $('#attachment').val('');
+            $('#fileNameDisplay').text('No files selected').css('color', '#666'); // Clear file display
             $('input[name="parent_comment_id"]').remove();
             loadComments();
         },

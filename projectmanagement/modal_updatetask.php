@@ -271,6 +271,47 @@ while($row = mysqli_fetch_assoc($myresult)){
 										</span>
 									</label>
 								</div>	
+
+								<div class="form-group">
+									<label class="block clearfix">Uploaded Files
+										<span class="block input-icon input-icon-left">
+											<select class="form-control" id="uploadedFiles" name="uploadedFiles">
+												<?php 
+													echo $query66 = "SELECT * FROM pm_threadtb WHERE taskid = '$taskId'";
+													$result66 = mysqli_query($conn, $query66);
+													while($row66 = mysqli_fetch_assoc($result66)){
+														$filename = $row66['file_data'];
+														$fileid = $row66['id'];
+														
+														// Check if the file_data is a path and file exists
+														if (file_exists($filename)) {
+															$fileContent = file_get_contents($filename);
+															$displayName = basename($filename) . " (File Content Available)";
+														} else {
+															$displayName = basename($filename) . " (File Not Found)";
+														}
+												?>
+												<option value="<?php echo $fileid;?>">
+													<?php echo $displayName; ?>
+												</option>
+												<?php } ?>
+											</select>
+										</span>
+									</label>
+								</div>		
+
+								<div class="form-group">
+									<label class="block clearfix">Attach File
+										<span class="block input-icon input-icon-left">
+										<input type="file" class="form-control" id="attachFile" name="attachFile">
+										</span>
+									</label>
+								</div>		
+
+								
+
+							
+
 							</div>
 							<div class="col-lg-6">
 								<a class="width-55 pull-right btn btn-sm btn-danger" href="test.php?taskId=<?php echo $taskId; ?>" id="openThread">
@@ -290,6 +331,12 @@ while($row = mysqli_fetch_assoc($myresult)){
 								<span class="bigger-110">Update</span>
 								<i class="ace-icon fa fa-arrow-right icon-on-right"></i>
 							</button>	
+
+							<button type="button" class="width-25 pull-right btn btn-sm btn-primary" id="uploadBtn" name="uploadBtn">
+    <span class="bigger-110">Upload File</span>
+    <i class="ace-icon fa fa-arrow-up icon-on-right"></i>
+</button>
+
 							
 						</div>
 					</fieldset>
@@ -324,4 +371,66 @@ while($row = mysqli_fetch_assoc($myresult)){
 						 else $('#form-field-select-taskAssigneeUp').removeClass('tag-input-style');
 					});
 				}
+</script>
+
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        // Handle file upload button click
+        $('#uploadBtn').click(function() {
+            var fileInput = $('#attachFile')[0].files[0];
+            var taskId = $('#taskIdUp2').val();
+            var userId = $('#taskUseridUp2').val();
+            
+            if (fileInput) {
+                var formData = new FormData();
+                formData.append('file', fileInput);
+                formData.append('taskId', taskId);
+                formData.append('userId', userId);
+                
+                $.ajax({
+                    url: 'upload_file.php',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        try {
+                            // Check if response is empty
+                            if (!response || response.trim() === '') {
+                                throw new Error('Empty response from server');
+                            }
+                            
+                            var result = JSON.parse(response);
+                            if (result.status === 'success') {
+                                alert('File uploaded successfully');
+                                // Optionally refresh the file list
+                                location.reload(); // Reload the page to show the new file
+                            } else {
+                                alert('Error: ' + (result.message || 'Unknown error'));
+                            }
+                        } catch (e) {
+                            console.error('Error parsing response:', e);
+                            console.error('Response:', response);
+                            alert('An error occurred while processing the response. Please check the console for details.');
+                        }
+                    },
+                    error: function(xhr) {
+                        var errorMsg = 'Error uploading file. Status: ' + xhr.status;
+                        try {
+                            var response = JSON.parse(xhr.responseText);
+                            if (response.message) {
+                                errorMsg += '\n' + response.message;
+                            }
+                        } catch (e) {
+                            errorMsg += '\n' + xhr.responseText;
+                        }
+                        alert(errorMsg);
+                    }
+                });
+            } else {
+                alert('Please select a file to upload');
+            }
+        }); // Added missing closing bracket
+    });
 </script>

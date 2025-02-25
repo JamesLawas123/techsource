@@ -16,7 +16,8 @@ function addComment($mysqlconn, $taskId, $userId, $message, $subject = '', $pare
             mkdir($uploadDir, 0755, true);
         }
         
-        $fileName = time() . '_' . basename($_FILES['attachment']['name']);
+        // Remove the timestamp prefix
+        $fileName = basename($_FILES['attachment']['name']);
         $filePath = $uploadDir . $fileName;
         
         if (!move_uploaded_file($_FILES['attachment']['tmp_name'], $filePath)) {
