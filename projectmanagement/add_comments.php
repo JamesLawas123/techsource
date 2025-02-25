@@ -26,6 +26,8 @@ function addComment($mysqlconn, $taskId, $userId, $message, $subject = '', $pare
 
     $subject = mysqli_real_escape_string($mysqlconn, $subject);
     $message = mysqli_real_escape_string($mysqlconn, $message);
+    // Remove newlines from the message
+    $message = str_replace(["\r\n", "\n", "\r"], ' ', $message);
     $datetimecreated = date('Y-m-d H:i:s');
     $type = $parentId ? 'reply' : 'comment';
 

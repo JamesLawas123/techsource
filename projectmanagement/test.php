@@ -1310,15 +1310,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 Thread
             </h4>
 			<div class="widget-toolbar action-buttons">
-                <a href="#" id="uploadButton">
-                    <i class="ace-icon fa fa-upload blue"></i>
-                </a>
-            </div>
-            <div class="widget-toolbar action-buttons">
                 <a href="#" id="refreshButton">
                     <i class="ace-icon fa fa-refresh blue"></i>
                 </a>
             </div>
+			<div class="widget-toolbar action-buttons" style="display: flex; align-items: center; gap: 8px;">
+    <label for="attachment" style="cursor: pointer; margin: 0;">
+        <i class="ace-icon fa fa-upload"></i>                
+    </label>
+    <span id="fileNameDisplay" style="font-size: 12px; color: #666; margin-left: 4px;">
+        No files selected
+    </span>
+</div>
+            
         </div>
 
         <div class="widget-body">
@@ -1326,11 +1330,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="comment-form">
                     <form id="commentForm" method="POST" action="add_comments.php">
 					<div class="form-group">
-    <input type="hidden" name="taskId" value="<?php echo $task_id; ?>">
-    <input type="hidden" name="subject" value="<?php echo htmlspecialchars($task['subject'] ?? ''); ?>">
-    <textarea class="form-control" name="message" rows="3" placeholder="Write your message..." required></textarea>
-    <input type="file" name="attachment" id="attachment" class="form-control" style="margin-top: 10px;">
-</div>
+						<input type="hidden" name="taskId" value="<?php echo $task_id; ?>">
+						<input type="hidden" name="subject" value="<?php echo htmlspecialchars($task['subject'] ?? ''); ?>">
+						<textarea class="form-control" name="message" rows="3" placeholder="Write your message..." ></textarea>
+						<input type="file" name="attachment" id="attachment" class="form-control" style="display: none;">
+					</div>
                         <button type="submit" class="btn btn-sm btn-primary">
                             <i class="ace-icon fa fa-paper-plane"></i>
                             Send
@@ -1345,6 +1349,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
         </div>
+
+		<script>
+            document.getElementById('attachment').addEventListener('change', function() {
+                const fileInput = this;
+                const fileNameDisplay = document.getElementById('fileNameDisplay');
+                
+                if (fileInput.files.length > 0) {
+                    const fileName = fileInput.files[0].name;
+                    fileNameDisplay.textContent = fileName;
+                    fileNameDisplay.style.color = '#333'; // Darker color for better visibility
+                } else {
+                    fileNameDisplay.textContent = 'No file selected';
+                    fileNameDisplay.style.color = '#666';
+                }
+            });
+            </script>
 
         <script>
         $(document).ready(function() {
