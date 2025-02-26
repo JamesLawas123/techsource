@@ -1127,180 +1127,181 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-
+<div class="page-header">
+            <h1 style="display: flex; align-items: center; gap: 8px; ">
+                <span>Subject</span>
+                <i class="ace-icon fa fa-angle-double-right"></i>
+                <span style="display: inline-block;"><?php echo htmlspecialchars($task['subject'] ?? 'N/A'); ?></span>
+            </h1>
+        </div>
 
 <div class="row">
     <!-- Left Column - Task Details -->
-    
     <div class="col-md-6">
-    <div class="profile-user-info profile-user-info-striped">
-        <div class="profile-info-row">
-            <div class="profile-info-name"> Project Owner </div>
-            <div class="profile-info-value">
-                <input type="text" class="form-control" name="project" value="<?php 
-                $projectName = 'N/A';
-                if (!empty($task['projectid'])) {
-                    $project_sql = "SELECT projectname FROM sys_projecttb WHERE id = " . intval($task['projectid']);
-                    $project_result = mysqli_query($mysqlconn, $project_sql);
-                    
-                    if ($project_result && mysqli_num_rows($project_result) > 0) {
-                        $project = mysqli_fetch_assoc($project_result);
-                        $projectName = htmlspecialchars($project['projectname']);
-                    }
-                }
-                echo $projectName;
-                ?>" disabled>
+        <div class="profile-user-info profile-user-info-striped">
+			<div class="profile-info-row">
+                <div class="profile-info-name"> 
+				<span class="editable" id="istask">
+					<?php 
+						$istaskValue = $task['istask'] ?? 0;
+						echo htmlspecialchars($istaskValue == 1 ? 'Assignment ID' : ($istaskValue == 2 ? 'Ticket ID' : 'N/A')); 
+					?>
+				</span>				
+				</div>
+                <div class="profile-info-value">
+                    <span class="editable" id="ticketID"><?php echo htmlspecialchars($task['id'] ?? 'N/A'); ?></span>
+                </div>
             </div>
-        </div>
 
-        <div class="profile-info-row">
-            <div class="profile-info-name"> Priority Level</div>
-            <div class="profile-info-value">
-                <select class="form-control" name="priority" disabled>
-                    <?php
-                    $priority_sql = "SELECT id, priorityname FROM sys_priorityleveltb";
-                    $priority_result = mysqli_query($mysqlconn, $priority_sql);
-                    while ($priority = mysqli_fetch_assoc($priority_result)) {
-                        $selected = ($priority['id'] == $task['priorityid']) ? 'selected' : '';
-                        echo '<option value="'.$priority['id'].'" '.$selected.'>'.htmlspecialchars($priority['priorityname']).'</option>';
+            <div class="profile-info-row">
+                <div class="profile-info-name"> Description </div>
+                <div class="profile-info-value">
+                    <span class="editable" id="description"><?php echo strip_tags($task['description'] ?? 'N/A'); ?></span>
+                </div>
+            </div>
+			<hr class="hr-8 dotted">
+		<div class="profile-info-row">
+                <div class="profile-info-name"> Project Owner </div>
+                <div class="profile-info-value">
+                    <?php 
+                    $projectName = 'N/A';
+                    if (!empty($task['projectid'])) {
+                        $project_sql = "SELECT projectname FROM sys_projecttb WHERE id = " . intval($task['projectid']);
+                        $project_result = mysqli_query($mysqlconn, $project_sql);
+                        
+                        if ($project_result && mysqli_num_rows($project_result) > 0) {
+                            $project = mysqli_fetch_assoc($project_result);
+                            $projectName = htmlspecialchars($project['projectname']);
+                        }
                     }
+                    echo '<span class="editable" id="project">' . $projectName . '</span>';
                     ?>
-                </select>
+                </div>
             </div>
-        </div>
 
-        <div class="profile-info-row">
-            <div class="profile-info-name"> Assignee </div>
-            <div class="profile-info-value">
-                <select class="form-control" name="assignee" disabled>
-                    <option value="">Select Assignee</option>
-                    <?php
-                    $assignee_sql = "SELECT id, CONCAT(user_firstname, ' ', user_lastname) as fullname FROM sys_usertb";
-                    $assignee_result = mysqli_query($mysqlconn, $assignee_sql);
-                    $selectedAssignees = !empty($task['assignee']) ? explode(',', $task['assignee']) : [];
-                    while ($assignee = mysqli_fetch_assoc($assignee_result)) {
-                        $selected = (!empty($selectedAssignees) && $assignee['id'] == $selectedAssignees[0]) ? 'selected' : '';
-                        echo '<option value="'.$assignee['id'].'" '.$selected.'>'.htmlspecialchars($assignee['fullname']).'</option>';
+			<div class="profile-info-row">
+                <div class="profile-info-name"> Priority Level</div>
+                <div class="profile-info-value">
+                    <?php 
+                    $priorityName = 'N/A';
+                    if (!empty($task['priorityid'])) {
+                        $priority_sql = "SELECT priorityname FROM sys_priorityleveltb WHERE id = " . intval($task['priorityid']);
+                        $priority_result = mysqli_query($mysqlconn, $priority_sql);
+                        
+                        if ($priority_result && mysqli_num_rows($priority_result) > 0) {  // Changed from $status_result to $priority_result
+                            $priority = mysqli_fetch_assoc($priority_result);
+                            $priorityName = htmlspecialchars($priority['priorityname']);  
+                        }
                     }
+                    echo '<span class="editable" id="priority">' . $priorityName . '</span>';
                     ?>
-                </select>
+                </div>
             </div>
-        </div>
 
-        <div class="profile-info-row">
-            <div class="profile-info-name"> Target Date </div>
-            <div class="profile-info-value">
-                <input type="date" class="form-control" name="deadline" value="<?php echo !empty($task['deadline']) ? htmlspecialchars(date('Y-m-d', strtotime($task['deadline']))) : ''; ?>" disabled>
-            </div>
-        </div>
+            
 
-        <div class="profile-info-row">
-            <div class="profile-info-name"> Start Date </div>
-            <div class="profile-info-value">
-                <input type="date" class="form-control" name="startdate" value="<?php echo !empty($task['startdate']) ? htmlspecialchars(date('Y-m-d', strtotime($task['startdate']))) : ''; ?>" disabled>
-            </div>
-        </div>
-
-        <div class="profile-info-row">
-            <div class="profile-info-name"> Actual End Date </div>
-            <div class="profile-info-value">
-                <input type="date" class="form-control" name="enddate" value="<?php echo !empty($task['enddate']) ? htmlspecialchars(date('Y-m-d', strtotime($task['enddate']))) : ''; ?>" disabled>
-            </div>
-        </div>
-
-        <div class="profile-info-row">
-            <div class="profile-info-name"> Task Status </div>
-            <div class="profile-info-value">
-                <select class="form-control" name="status" disabled>
+            <div class="profile-info-row">
+                <div class="profile-info-name"> Assignee </div>
+                <div class="profile-info-value">
                     <?php
-                    $status_sql = "SELECT id, statusname FROM sys_taskstatustb";
-                    $status_result = mysqli_query($mysqlconn, $status_sql);
-                    while ($status = mysqli_fetch_assoc($status_result)) {
-                        $selected = ($status['id'] == $task['statusid']) ? 'selected' : '';
-                        echo '<option value="'.$status['id'].'" '.$selected.'>'.htmlspecialchars($status['statusname']).'</option>';
+                    $assigneeNames = [];
+                    if (!empty($task['assignee'])) {
+                        $assigneeIds = explode(',', $task['assignee']);
+                        $assigneeIds = array_map('intval', $assigneeIds);
+                        $assigneeIds = array_filter($assigneeIds);
+                        
+                        if (!empty($assigneeIds)) {
+                            $assignee_sql = "SELECT user_firstname, user_lastname 
+                                            FROM sys_usertb 
+                                            WHERE id IN (" . implode(',', $assigneeIds) . ")";
+                            $assignee_result = mysqli_query($mysqlconn, $assignee_sql);
+                            
+                            if ($assignee_result && mysqli_num_rows($assignee_result) > 0) {
+                                while ($assignee = mysqli_fetch_assoc($assignee_result)) {
+                                    $assigneeNames[] = htmlspecialchars($assignee['user_firstname'] . ' ' . $assignee['user_lastname']);
+                                }
+                            }
+                        }
                     }
+                    echo '<span class="editable" id="assignee">' . 
+                         (!empty($assigneeNames) ? implode(', ', $assigneeNames) : 'N/A') . 
+                         '</span>';
                     ?>
-                </select>
+                </div>
             </div>
-        </div>
 
-        <div class="profile-info-row">
-            <div class="profile-info-name"> Classification </div>
-            <div class="profile-info-value">
-                <select class="form-control" name="classification" disabled>
-                    <?php
-                    $classification_sql = "SELECT id, classification FROM sys_taskclassificationtb";
-                    $classification_result = mysqli_query($mysqlconn, $classification_sql);
-                    while ($classification = mysqli_fetch_assoc($classification_result)) {
-                        $selected = ($classification['id'] == $task['classificationid']) ? 'selected' : '';
-                        echo '<option value="'.$classification['id'].'" '.$selected.'>'.htmlspecialchars($classification['classification']).'</option>';
+			<div class="profile-info-row">
+                <div class="profile-info-name"> Target Date </div>
+                <div class="profile-info-value">
+                    <span class="editable" id="deadline"><?php echo !empty($task['deadline']) ? htmlspecialchars(date('Y-m-d', strtotime($task['deadline']))) : 'N/A'; ?></span>
+                </div>
+            </div>
+
+			<div class="profile-info-row">
+                <div class="profile-info-name"> Start Date </div>
+                <div class="profile-info-value">
+                    <span class="editable" id="startdate"><?php echo !empty($task['startdate']) ? htmlspecialchars(date('Y-m-d', strtotime($task['startdate']))) : 'N/A'; ?></span>
+                </div>
+            </div>
+
+			<div class="profile-info-row">
+                <div class="profile-info-name"> Actual End Date </div>
+                <div class="profile-info-value">
+                    <span class="editable" id="enddate"><?php echo !empty($task['enddate']) ? htmlspecialchars(date('Y-m-d', strtotime($task['enddate']))) : 'N/A'; ?></span>
+                </div>
+            </div>
+
+			<div class="profile-info-row">
+                <div class="profile-info-name"> Task Status </div>
+                <div class="profile-info-value">
+                    <?php 
+                    $statusName = 'N/A';
+                    if (!empty($task['statusid'])) {
+                        $status_sql = "SELECT statusname FROM sys_taskstatustb WHERE id = " . intval($task['statusid']);
+                        $status_result = mysqli_query($mysqlconn, $status_sql);
+                        
+                        if ($status_result && mysqli_num_rows($status_result) > 0) {
+                            $status = mysqli_fetch_assoc($status_result);
+                            $statusName = htmlspecialchars($status['statusname']);  
+                        }
                     }
+                    echo '<span class="editable" id="status">' . $statusName . '</span>';
                     ?>
-                </select>
+                </div>
             </div>
-        </div>
 
-        <div class="profile-info-row">
-            <div class="profile-info-name"> Subject </div>
-            <div class="profile-info-value">
-                <input type="text" class="form-control" name="subject" value="<?php echo htmlspecialchars($task['subject'] ?? ''); ?>" disabled>
+            <div class="profile-info-row">
+                <div class="profile-info-name"> Classification </div>
+                <div class="profile-info-value">
+                    <?php 
+                    $trackerName = 'N/A';
+                    if (!empty($task['classificationid'])) {
+                        $tracker_sql = "SELECT classification FROM sys_taskclassificationtb WHERE id = " . intval($task['classificationid']);
+                        $tracker_result = mysqli_query($mysqlconn, $tracker_sql);
+                        
+                        if ($tracker_result && mysqli_num_rows($tracker_result) > 0) {
+                            $tracker = mysqli_fetch_assoc($tracker_result);
+                            $trackerName = htmlspecialchars($tracker['classification']);  
+                        }
+                    }
+                    echo '<span class="editable" id="tracker">' . $trackerName . '</span>';
+                    ?>
+                </div>
             </div>
-        </div>
 
-        <div class="profile-info-row">
-            <div class="profile-info-name"> Description </div>
-            <div class="profile-info-value">
-                <textarea class="form-control" name="description" rows="4" disabled><?php echo htmlspecialchars($task['description'] ?? ''); ?></textarea>
-            </div>
+			
         </div>
+		<!-- <div style="text-align: right; margin-top: 20px;">
+            <button onclick="showUpdateTask('<?php echo $taskId;?>');" 
+                class="btn btn-primary <?php echo $myClass; ?>">
+                Update
+            </button>
+			<button           
+                class="btn btn-success">
+                Save
+            </button>
+        </div> -->
     </div>
-    <div style="text-align: right; margin-top: 20px;">
-        <button type="button" onclick="enableFormFields()" 
-            class="btn btn-primary <?php echo $myClass; ?>" id="updateButton">
-            Update
-        </button>
-        <button type="button" class="btn btn-danger" disabled id="cancelButton" onclick="disableFormFields()">
-            Cancel
-        </button>
-        <button type="submit" class="btn btn-success" disabled id="saveButton">
-            Save
-        </button>
-    </div>
-</div>
-
-<script>
-        function enableFormFields() {
-            // Enable all input fields except the comment box
-            const inputs = document.querySelectorAll('.form-control:not([name="message"])');
-            inputs.forEach(input => input.disabled = false);
-
-            // Enable the Save and Cancel buttons
-            document.getElementById('saveButton').disabled = false;
-            document.getElementById('cancelButton').disabled = false;
-
-            // Disable the Update button
-            document.getElementById('updateButton').disabled = true;
-
-            // Optionally, focus on the first input field
-            if (inputs.length > 0) {
-                inputs[0].focus();
-            }
-        }
-
-        function disableFormFields() {
-            // Disable all input fields except the comment box
-            const inputs = document.querySelectorAll('.form-control:not([name="message"])');
-            inputs.forEach(input => input.disabled = true);
-
-            // Disable the Save and Cancel buttons
-            document.getElementById('saveButton').disabled = true;
-            document.getElementById('cancelButton').disabled = true;
-
-            // Enable the Update button
-            document.getElementById('updateButton').disabled = false;
-        }
-    </script>
-
 
 	
 
@@ -1311,22 +1312,33 @@ document.addEventListener('DOMContentLoaded', function() {
                 <i class="ace-icon fa fa-rss orange"></i>
                 Thread
             </h4>
-            <div class="widget-toolbar action-buttons">
+			<!-- <div class="widget-toolbar action-buttons">
                 <a href="#" id="refreshButton">
                     <i class="ace-icon fa fa-refresh blue"></i>
                 </a>
-            </div>
+            </div> -->
+			<div class="widget-toolbar action-buttons" style="display: flex; align-items: center; gap: 8px;">
+				<label for="attachment" style="cursor: pointer; margin: 0;">
+					<i class="ace-icon fa fa-upload"></i>                
+				</label>
+			</div>
+			<div class="widget-toolbar action-buttons">
+				<span id="fileNameDisplay" style="font-size: 12px; color: #666; margin-left: 4px;">
+				No files selected
+				</span>
+            </div>       
         </div>
 
         <div class="widget-body">
             <div class="widget-main padding-8">
                 <div class="comment-form">
                     <form id="commentForm" method="POST" action="add_comments.php">
-                        <div class="form-group">
-                            <input type="hidden" name="taskId" value="<?php echo $task_id; ?>">
-                            <input type="hidden" name="subject" value="<?php echo htmlspecialchars($task['subject'] ?? ''); ?>">
-                            <textarea class="form-control" name="message" rows="3" placeholder="Write your message..." required></textarea>
-                        </div>
+					<div class="form-group">
+						<input type="hidden" name="taskId" value="<?php echo $task_id; ?>">
+						<input type="hidden" name="subject" value="<?php echo htmlspecialchars($task['subject'] ?? ''); ?>">
+						<textarea class="form-control" name="message" rows="3" placeholder="Write your message..." ></textarea>
+						<input type="file" name="attachment" id="attachment" class="form-control" style="display: none;">
+					</div>
                         <button type="submit" class="btn btn-sm btn-primary">
                             <i class="ace-icon fa fa-paper-plane"></i>
                             Send
@@ -1341,6 +1353,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
         </div>
+
+		<script>
+            document.getElementById('attachment').addEventListener('change', function() {
+                const fileInput = this;
+                const fileNameDisplay = document.getElementById('fileNameDisplay');
+                
+                if (fileInput.files.length > 0) {
+                    const fileName = fileInput.files[0].name;
+                    fileNameDisplay.textContent = fileName;
+                    fileNameDisplay.style.color = '#333'; // Darker color for better visibility
+                } else {
+                    fileNameDisplay.textContent = 'No file selected';
+                    fileNameDisplay.style.color = '#666';
+                }
+            });
+            </script>
 
         <script>
         $(document).ready(function() {
@@ -1371,13 +1399,42 @@ document.addEventListener('DOMContentLoaded', function() {
 function buildCommentHtml(comments, level = 0) {
     let html = '';
     comments.forEach(function(comment) {
+        // Skip comments with type 'file'
+        if (comment.type === 'file') {
+            return;  // Skip this iteration
+        }
+
+        let fileHtml = '';
+        if (comment.file_data) {
+            const fileName = comment.file_data.split('/').pop();
+            const fileExtension = fileName.split('.').pop().toLowerCase();
+            const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
+            
+            if (imageExtensions.includes(fileExtension)) {
+                fileHtml = `
+                    <div style="margin-top: 8px;">
+                        <img src="${comment.file_data}" alt="Attached Image" 
+                             style="max-width: 100%; max-height: 200px; border-radius: 4px;">
+                    </div>
+                `;
+            } else {
+                fileHtml = `<a href="${comment.file_data}" target="_blank" class="btn btn-xs btn-info" style="margin-left: 8px;">
+                    <i class="ace-icon fa fa-paperclip"></i>
+                    ${fileName}
+                </a>`;
+            }
+        }
+
         html += `
             <div class="profile-activity clearfix" style="margin-left: ${level * 40}px; position: relative;">
                 <div style="position: relative;">
                     <img class="pull-left" alt="${comment.username}'s avatar" src="../assets/images/avatars/avatar5.png" />
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <a class="user" href="#" style="font-weight: 600; color: #2a6496; text-decoration: none;">${comment.username}</a>
-                        <div class="comment-text" style="margin: 0; font-size: 14px; line-height: 1.5; color: #555;">${comment.message}</div>
+                        <div class="comment-text" style="margin: 0; font-size: 14px; line-height: 1.5; color: #555;">
+                            ${comment.message}
+                            ${fileHtml}
+                        </div>
                     </div>
                     <div class="time" style="font-size: 10px; color: #999; font-weight: 1000;">
                         <i class="ace-icon fa fa-clock-o"></i>
@@ -1411,25 +1468,29 @@ function buildCommentHtml(comments, level = 0) {
 
             // Handle form submission
             $('#commentForm').on('submit', function(e) {
-                e.preventDefault();
-                $.ajax({
-                    url: $(this).attr('action'),
-                    method: 'POST',
-                    data: $(this).serialize(),
-                    success: function(response) {
-                        // Clear the textarea
-                        $('textarea[name="message"]').val('');
-                        // Remove parent comment ID if set
-                        $('input[name="parent_comment_id"]').remove();
-                        // Immediately load new comments
-                        loadComments();
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('Error posting comment:', error);
-                        alert('Error posting comment. Please try again.');
-                    }
-                });
-            });
+    e.preventDefault();
+    
+    var formData = new FormData(this);
+    
+    $.ajax({
+        url: $(this).attr('action'),
+        method: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(response) {
+            $('textarea[name="message"]').val('');
+            $('#attachment').val('');
+            $('#fileNameDisplay').text('No files selected').css('color', '#666'); // Clear file display
+            $('input[name="parent_comment_id"]').remove();
+            loadComments();
+        },
+        error: function(xhr, status, error) {
+            console.error('Error posting comment:', error);
+            alert('Error posting comment. Please try again.');
+        }
+    });
+});
 
             // Reply button handler
             $('#profile-feed-1').on('click', '.reply-btn', function(e) {
@@ -1487,19 +1548,19 @@ function buildCommentHtml(comments, level = 0) {
 									<div id="user-profile-2" class="user-profile">
 										<div class="tabbable">
 											<ul class="nav nav-tabs padding-18">
-												<li class="active">
+                    <li class="active">
 													<a data-toggle="tab" href="#home">
 														<i class="green ace-icon fa fa-user bigger-120"></i>
 														Profile
-													</a>
-												</li>
+                        </a>
+                    </li>
 
 												<li>
 													<a data-toggle="tab" href="#feed">
 														<i class="orange ace-icon fa fa-rss bigger-120"></i>
 														Activity Feed
-													</a>
-												</li>
+                        </a>
+                    </li>
 
 												<li>
 													<a data-toggle="tab" href="#friends">
@@ -1512,9 +1573,9 @@ function buildCommentHtml(comments, level = 0) {
 													<a data-toggle="tab" href="#pictures">
 														<i class="pink ace-icon fa fa-picture-o bigger-120"></i>
 														Pictures
-													</a>
-												</li>
-											</ul>
+                        </a>
+                    </li>
+                </ul>
 
 											<div class="tab-content no-border padding-24">
 												<div id="home" class="tab-pane in active">
@@ -2677,7 +2738,7 @@ function buildCommentHtml(comments, level = 0) {
 																<div class="vspace-12-sm"></div>
 
 																<div class="col-xs-12 col-sm-8">
-																	<div class="form-group">
+                                <div class="form-group">
 																		<label class="col-sm-4 control-label no-padding-right" for="form-field-username">Username</label>
 
 																		<div class="col-sm-8">

@@ -277,19 +277,14 @@ while($row = mysqli_fetch_assoc($myresult)){
 										<span class="block input-icon input-icon-left">
 											<select class="form-control" id="uploadedFiles" name="uploadedFiles">
 												<?php 
-													echo $query66 = "SELECT * FROM pm_threadtb WHERE taskid = '$taskId'";
+													$query66 = "SELECT * FROM pm_threadtb WHERE taskid = '$taskId' AND file_data IS NOT NULL AND file_data != ''";
 													$result66 = mysqli_query($conn, $query66);
 													while($row66 = mysqli_fetch_assoc($result66)){
-														$filename = $row66['file_data'];
+														$fileContent = $row66['file_data'];
 														$fileid = $row66['id'];
-														
-														// Check if the file_data is a path and file exists
-														if (file_exists($filename)) {
-															$fileContent = file_get_contents($filename);
-															$displayName = basename($filename) . " (File Content Available)";
-														} else {
-															$displayName = basename($filename) . " (File Not Found)";
-														}
+														// Extract filename from path
+														$filename = basename($fileContent);
+														$displayName = $filename ? $filename : "File ID: $fileid";
 												?>
 												<option value="<?php echo $fileid;?>">
 													<?php echo $displayName; ?>
@@ -298,12 +293,20 @@ while($row = mysqli_fetch_assoc($myresult)){
 											</select>
 										</span>
 									</label>
-								</div>		
+								</div>
 
 								<div class="form-group">
 									<label class="block clearfix">Attach File
 										<span class="block input-icon input-icon-left">
-										<input type="file" class="form-control" id="attachFile" name="attachFile">
+											<div class="input-group">
+												<input type="file" class="form-control" id="attachFile" name="attachFile">
+												<span class="input-group-btn">
+													<button type="button" class="btn btn-sm btn-primary" id="uploadBtn" name="uploadBtn">
+														<span class="bigger-110">Upload</span>
+														<i class="ace-icon fa fa-arrow-up icon-on-right"></i>
+													</button>
+												</span>
+											</div>
 										</span>
 									</label>
 								</div>		
@@ -332,10 +335,7 @@ while($row = mysqli_fetch_assoc($myresult)){
 								<i class="ace-icon fa fa-arrow-right icon-on-right"></i>
 							</button>	
 
-							<button type="button" class="width-25 pull-right btn btn-sm btn-primary" id="uploadBtn" name="uploadBtn">
-    <span class="bigger-110">Upload File</span>
-    <i class="ace-icon fa fa-arrow-up icon-on-right"></i>
-</button>
+							
 
 							
 						</div>
@@ -345,11 +345,14 @@ while($row = mysqli_fetch_assoc($myresult)){
 		</div>
 	</div>
 </div>
+<link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="../assets/customjs/projectmanagement.js"></script>
 <!-- jQuery Tags Input -->
 <script src="../assets/customjs/jquery.tagsinput.js"></script>
 <script src="../assets/js/chosen.jquery.min.js"></script>
 <script type="text/javascript">
+	
 	$(document).ready(function() {
         $('#taskAssigneeupdate2').tagsInput({
           width: 'auto'
@@ -382,55 +385,111 @@ while($row = mysqli_fetch_assoc($myresult)){
             var taskId = $('#taskIdUp2').val();
             var userId = $('#taskUseridUp2').val();
             
-            if (fileInput) {
-                var formData = new FormData();
-                formData.append('file', fileInput);
-                formData.append('taskId', taskId);
-                formData.append('userId', userId);
-                
-                $.ajax({
-                    url: 'upload_file.php',
-                    type: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    success: function(response) {
-                        try {
-                            // Check if response is empty
-                            if (!response || response.trim() === '') {
-                                throw new Error('Empty response from server');
-                            }
-                            
-                            var result = JSON.parse(response);
-                            if (result.status === 'success') {
-                                alert('File uploaded successfully');
-                                // Optionally refresh the file list
-                                location.reload(); // Reload the page to show the new file
-                            } else {
-                                alert('Error: ' + (result.message || 'Unknown error'));
-                            }
-                        } catch (e) {
-                            console.error('Error parsing response:', e);
-                            console.error('Response:', response);
-                            alert('An error occurred while processing the response. Please check the console for details.');
-                        }
-                    },
-                    error: function(xhr) {
-                        var errorMsg = 'Error uploading file. Status: ' + xhr.status;
-                        try {
-                            var response = JSON.parse(xhr.responseText);
-                            if (response.message) {
-                                errorMsg += '\n' + response.message;
-                            }
-                        } catch (e) {
-                            errorMsg += '\n' + xhr.responseText;
-                        }
-                        alert(errorMsg);
-                    }
+            // Basic validation - check if file is selected
+            if (!fileInput) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No File Selected',
+                    text: 'Please select a file to upload',
+                    confirmButtonColor: '#3085d6'
                 });
-            } else {
-                alert('Please select a file to upload');
+                return;
             }
-        }); // Added missing closing bracket
+
+            // Optional: Validate file size (50MB limit)
+            var maxSize = 50 * 1024 * 1024; // 50MB in bytes
+            if (fileInput.size > maxSize) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'File Too Large',
+                    text: 'Maximum file size allowed is 50MB',
+                    confirmButtonColor: '#3085d6'
+                });
+                return;
+            }
+            
+            // Show loading state
+            Swal.fire({
+                title: 'Uploading...',
+                text: 'Please wait while we upload your file',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                willOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            var formData = new FormData();
+            formData.append('file', fileInput);
+            formData.append('taskId', taskId);
+            formData.append('userId', userId);
+            formData.append('taskSubjectUp2', $('#taskSubjectUp2').val());
+            
+            // Disable upload button
+            $('#uploadBtn').prop('disabled', true);
+            
+            $.ajax({
+                url: 'upload_file.php',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    try {
+                        let result = response;
+                        if (typeof response === 'string') {
+                            try {
+                                result = JSON.parse(response);
+                            } catch (e) {
+                                console.log('Response is not JSON:', response);
+                                throw new Error('Invalid response format');
+                            }
+                        }
+
+                        if (result.status === 'success') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success!',
+                                text: 'File uploaded successfully',
+                                confirmButtonColor: '#3085d6'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    location.reload();
+                                }
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Upload Failed',
+                                text: result.message || 'Unknown error occurred',
+                                confirmButtonColor: '#3085d6'
+                            });
+                        }
+                    } catch (e) {
+                        console.error('Error processing response:', e);
+                        console.error('Raw response:', response);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'An error occurred while processing the server response',
+                            confirmButtonColor: '#3085d6'
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Upload failed:', status, error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Upload Failed',
+                        text: error || 'Unknown error occurred',
+                        confirmButtonColor: '#3085d6'
+                    });
+                },
+                complete: function() {
+                    // Re-enable upload button
+                    $('#uploadBtn').prop('disabled', false);
+                }
+            });
+        });
     });
 </script>

@@ -37,6 +37,7 @@ $sql = "SELECT t.*, u.username
         FROM pm_threadtb t
         JOIN sys_usertb u ON t.createdbyid = u.id
         WHERE t.taskid = $task_id
+        AND (t.type IS NULL OR t.type != 'file')
         ORDER BY t.datetimecreated DESC";
 
 $result = mysqli_query($mysqlconn, $sql);

@@ -1132,19 +1132,26 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="row">
     <!-- Left Column - Task Details -->
     <div class="col-md-6">
-        <div class="profile-user-info profile-user-info-striped">
-
 		
-        <div class="page-header">
-            <h1 style="display: flex; align-items: center; gap: 8px;">
+		<div class="page-header">
+			<h1 style="display: flex; align-items: center; gap: 8px; ">
                 <span>Subject</span>
                 <i class="ace-icon fa fa-angle-double-right"></i>
                 <span style="display: inline-block;"><?php echo htmlspecialchars($task['subject'] ?? 'N/A'); ?></span>
             </h1>
-        </div>
+		</div>
 
+        <div class="profile-user-info profile-user-info-striped">
 			<div class="profile-info-row">
-                <div class="profile-info-name"> Ticket ID </div>
+                <div class="profile-info-name"> 
+				<span class="editable" id="istask">
+					
+					<?php 
+						$istaskValue = $task['istask'] ?? 0;
+						echo htmlspecialchars($istaskValue == 1 ? 'Assignment ID' : ($istaskValue == 2 ? 'Ticket ID' : 'N/A')); 
+					?>
+				</span>				
+				</div>
                 <div class="profile-info-value">
                     <span class="editable" id="ticketID"><?php echo htmlspecialchars($task['id'] ?? 'N/A'); ?></span>
                 </div>
@@ -1304,56 +1311,121 @@ document.addEventListener('DOMContentLoaded', function() {
 
 	<div class="col-md-6">
     <div class="widget-box transparent">
-        <div class="widget-header widget-header-small">
-            <h4 class="widget-title blue smaller">
-                <i class="ace-icon fa fa-rss orange"></i>
-                Thread
-            </h4>
-			<!-- <div class="widget-toolbar action-buttons">
-                <a href="#" id="refreshButton">
-                    <i class="ace-icon fa fa-refresh blue"></i>
-                </a>
-            </div> -->
-			<div class="widget-toolbar action-buttons" style="display: flex; align-items: center; gap: 8px;">
-				<label for="attachment" style="cursor: pointer; margin: 0;">
-					<i class="ace-icon fa fa-upload"></i>                
-				</label>
-			</div>
-			<div class="widget-toolbar action-buttons">
-				<span id="fileNameDisplay" style="font-size: 12px; color: #666; margin-left: 4px;">
-				No files selected
-				</span>
-            </div>
-			
-            
-        </div>
+    
+		
 
         <div class="widget-body">
             <div class="widget-main padding-8">
-                <div class="comment-form">
-                    <form id="commentForm" method="POST" action="add_comments.php">
-					<div class="form-group">
-						<input type="hidden" name="taskId" value="<?php echo $task_id; ?>">
-						<input type="hidden" name="subject" value="<?php echo htmlspecialchars($task['subject'] ?? ''); ?>">
-						<textarea class="form-control" name="message" rows="3" placeholder="Write your message..." ></textarea>
-						<input type="file" name="attachment" id="attachment" class="form-control" style="display: none;">
-					</div>
-                        <button type="submit" class="btn btn-sm btn-primary">
-                            <i class="ace-icon fa fa-paper-plane"></i>
-                            Send
-                        </button>
-                    </form>
-                </div>
+                <!-- Tab navigation -->
+                <ul class="nav nav-tabs padding-12" role="tablist">
+                    <li class="active">
+                        <a href="#threads-tab" role="tab" data-toggle="tab">
+                            <i class="ace-icon fa fa-comments"></i>
+                            Threads
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#files-tab" role="tab" data-toggle="tab">
+                            <i class="ace-icon fa fa-file"></i>
+                            Media
+                        </a>
+                    </li>
+                </ul>
 
-                <div class="space-12"></div>
+                <!-- Tab content -->
+                <div class="tab-content">
+                    <!-- Threads tab -->
+                    <div class="tab-pane active" id="threads-tab">
+                             
 
-                <div id="profile-feed-1" class="profile-feed" style="max-height: 400px; overflow-y: auto;">
-                    <!-- Comments will be loaded here -->
+                        <div class="comment-form">
+                            <form id="commentForm" method="POST" action="add_comments.php">
+                            <div class="form-group">
+                                <input type="hidden" name="taskId" value="<?php echo $task_id; ?>">
+                                <input type="hidden" name="subject" value="<?php echo htmlspecialchars($task['subject'] ?? ''); ?>">
+                                <textarea class="form-control" name="message" rows="3" placeholder="Write your message..." ></textarea>
+                                <input type="file" name="attachment" id="attachment" class="form-control" style="display: none;">
+                            </div>
+                                <button type="submit" class="btn btn-sm btn-primary">
+                                    <i class="ace-icon fa fa-paper-plane"></i>
+                                    Send
+                                </button>
+								<div class="widget-toolbar action-buttons" style="display: flex; align-items: center; gap: 8px;">
+                            <label for="attachment" style="cursor: pointer; margin: 0;">
+                                <i class="ace-icon fa fa-upload"></i>                
+                            </label>
+                        </div>
+                        <div class="widget-toolbar action-buttons">
+                            <span id="fileNameDisplay" style="font-size: 12px; color: #666; margin-left: 4px;">
+                            No files selected
+                            </span>
+                        </div>  
+                            </form>
+                        </div>
+
+                        <div class="space-12"></div>
+
+                        <div id="profile-feed-1" class="profile-feed" style="max-height: 257px; overflow-y: auto;">
+                            <!-- Comments will be loaded here -->
+                        </div>
+                    </div>
+
+                    <!-- Files tab -->
+                    <div class="tab-pane" id="files-tab">
+                        <div id="attached-files" style="max-height: 400px; overflow-y: auto;">
+                            <div class="form-group">
+                                <ul class="list-unstyled">
+                                    <?php 
+                                        // Check if connection exists
+                                        if (!$mysqlconn) {
+                                            echo '<li class="alert alert-danger">Database connection failed</li>';
+                                        } else {
+                                            // Add error checking for the query
+                                            $query66 = "SELECT * FROM pm_threadtb WHERE taskid = ? AND file_data IS NOT NULL AND file_data != ''";
+                                            $stmt = mysqli_prepare($mysqlconn, $query66);
+                                            
+                                            if ($stmt) {
+                                                mysqli_stmt_bind_param($stmt, 's', $task_id);
+                                                mysqli_stmt_execute($stmt);
+                                                $result66 = mysqli_stmt_get_result($stmt);
+                                                
+                                                if (mysqli_num_rows($result66) > 0) {
+                                                    while($row66 = mysqli_fetch_assoc($result66)){
+                                                        $fileContent = $row66['file_data'];
+                                                        $fileid = $row66['id'];
+                                                        // Extract filename from path
+                                                        $filename = basename($fileContent);
+                                                        $displayName = $filename ? $filename : "File ID: $fileid";
+                                                        ?>
+                                                        <li class="file-item" style="padding: 10px; border-bottom: 1px solid #eee;">
+                                                            <a href="<?php echo htmlspecialchars($fileContent); ?>" 
+                                                               class="file-info" 
+                                                               download 
+                                                               style="text-decoration: none; color: inherit;">
+                                                                <i class="ace-icon fa fa-file-o"></i>
+                                                                <span class="filename"><?php echo htmlspecialchars($displayName); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <?php
+                                                    }
+                                                } else {
+                                                    echo '<li class="alert alert-info">No files found</li>';
+                                                }
+                                                mysqli_stmt_close($stmt);
+                                            } else {
+                                                echo '<li class="alert alert-danger">Query preparation failed</li>';
+                                            }
+                                        }
+                                    ?>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-		<script>
+        <script>
             document.getElementById('attachment').addEventListener('change', function() {
                 const fileInput = this;
                 const fileNameDisplay = document.getElementById('fileNameDisplay');
@@ -1367,7 +1439,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     fileNameDisplay.style.color = '#666';
                 }
             });
-            </script>
+        </script>
 
         <script>
         $(document).ready(function() {
@@ -1376,79 +1448,84 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Function to load comments
             function loadComments() {
-    $.ajax({
-        url: 'get_comments.php',
-        data: { taskId: taskId },
-        method: 'GET',
-        success: function(comments) {
-            let html = '';
-            if (comments.length > 0) {
-                html = buildCommentHtml(comments);
-            } else {
-                html = '<div class="alert alert-info">No messages yet for this task.</div>';
+                $.ajax({
+                    url: 'get_comments.php',
+                    data: { taskId: taskId },
+                    method: 'GET',
+                    success: function(comments) {
+                        let html = '';
+                        if (comments.length > 0) {
+                            html = buildCommentHtml(comments);
+                        } else {
+                            html = '<div class="alert alert-info">No messages yet for this task.</div>';
+                        }
+                        $('#profile-feed-1').html(html);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error fetching comments:', error);
+                    }
+                });
             }
-            $('#profile-feed-1').html(html);
-        },
-        error: function(xhr, status, error) {
-            console.error('Error fetching comments:', error);
-        }
-    });
-}
 
-function buildCommentHtml(comments, level = 0) {
-    let html = '';
-    comments.forEach(function(comment) {
-        let fileHtml = '';
-        if (comment.file_data) {
-            const fileName = comment.file_data.split('/').pop();
-            const fileExtension = fileName.split('.').pop().toLowerCase();
-            const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
-            
-            if (imageExtensions.includes(fileExtension)) {
-                fileHtml = `
-                    <div style="margin-top: 8px;">
-                        <img src="${comment.file_data}" alt="Attached Image" 
-                             style="max-width: 100%; max-height: 200px; border-radius: 4px;">
-                    </div>
-                `;
-            } else {
-                fileHtml = `<a href="${comment.file_data}" target="_blank" class="btn btn-xs btn-info" style="margin-left: 8px;">
-                    <i class="ace-icon fa fa-paperclip"></i>
-                    ${fileName}
-                </a>`;
-            }
-        }
+            function buildCommentHtml(comments, level = 0) {
+                let html = '';
+                comments.forEach(function(comment) {
+                    // Skip comments with type 'file'
+                    if (comment.type === 'file') {
+                        return;  // Skip this iteration
+                    }
 
-        html += `
-            <div class="profile-activity clearfix" style="margin-left: ${level * 40}px; position: relative;">
-                <div style="position: relative;">
-                    <img class="pull-left" alt="${comment.username}'s avatar" src="../assets/images/avatars/avatar5.png" />
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <a class="user" href="#" style="font-weight: 600; color: #2a6496; text-decoration: none;">${comment.username}</a>
-                        <div class="comment-text" style="margin: 0; font-size: 14px; line-height: 1.5; color: #555;">
-                            ${comment.message}
-                            ${fileHtml}
+                    let fileHtml = '';
+                    if (comment.file_data) {
+                        const fileName = comment.file_data.split('/').pop();
+                        const fileExtension = fileName.split('.').pop().toLowerCase();
+                        const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
+                        
+                        if (imageExtensions.includes(fileExtension)) {
+                            fileHtml = `
+                                <div style="margin-top: 8px;">
+                                    <img src="${comment.file_data}" alt="Attached Image" 
+                                         style="max-width: 100%; max-height: 200px; border-radius: 4px;">
+                                </div>
+                            `;
+                        } else {
+                            fileHtml = `<a href="${comment.file_data}" target="_blank" class="btn btn-xs btn-info" style="margin-left: 8px;">
+                                <i class="ace-icon fa fa-paperclip"></i>
+                                ${fileName}
+                            </a>`;
+                        }
+                    }
+
+                    html += `
+                        <div class="profile-activity clearfix" style="margin-left: ${level * 40}px; position: relative;">
+                            <div style="position: relative;">
+                                <img class="pull-left" alt="${comment.username}'s avatar" src="../assets/images/avatars/avatar5.png" />
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <a class="user" href="#" style="font-weight: 600; color: #2a6496; text-decoration: none;">${comment.username}</a>
+                                    <div class="comment-text" style="margin: 0; font-size: 14px; line-height: 1.5; color: #555;">
+                                        ${comment.message}
+                                        ${fileHtml}
+                                    </div>
+                                </div>
+                                <div class="time" style="font-size: 10px; color: #999; font-weight: 1000;">
+                                    <i class="ace-icon fa fa-clock-o"></i>
+                                    ${comment.time}
+                                    ${comment.parent_id ? '<span class="reply-indicator" style="margin-left: 8px; color: #666; font-size: 10px;"> Replied</span>' : ''}
+                                    <a href="#" class="reply-btn" data-comment-id="${comment.id}" style="margin-left: 8px; padding: 0 4px; background: transparent; border: none; color: #999;">
+                                        <i class="ace-icon fa fa-reply" style="font-size: 10px;"></i>
+                                    </a>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="time" style="font-size: 10px; color: #999; font-weight: 1000;">
-                        <i class="ace-icon fa fa-clock-o"></i>
-                        ${comment.time}
-                        ${comment.parent_id ? '<span class="reply-indicator" style="margin-left: 8px; color: #666; font-size: 10px;"> Replied</span>' : ''}
-                        <a href="#" class="reply-btn" data-comment-id="${comment.id}" style="margin-left: 8px; padding: 0 4px; background: transparent; border: none; color: #999;">
-                            <i class="ace-icon fa fa-reply" style="font-size: 10px;"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        `;
-        if (comment.replies && comment.replies.length > 0) {
-            // Sort replies by datetimecreated DESC to show latest replies first
-            comment.replies.sort((a, b) => new Date(b.datetimecreated) - new Date(a.datetimecreated));
-            html += buildCommentHtml(comment.replies, level + 1);
-        }
-    });
-    return html;
-}
+                    `;
+                    if (comment.replies && comment.replies.length > 0) {
+                        // Sort replies by datetimecreated DESC to show latest replies first
+                        comment.replies.sort((a, b) => new Date(b.datetimecreated) - new Date(a.datetimecreated));
+                        html += buildCommentHtml(comment.replies, level + 1);
+                    }
+                });
+                return html;
+            }
 
             // Initial load
             loadComments();
@@ -1462,29 +1539,29 @@ function buildCommentHtml(comments, level = 0) {
 
             // Handle form submission
             $('#commentForm').on('submit', function(e) {
-    e.preventDefault();
-    
-    var formData = new FormData(this);
-    
-    $.ajax({
-        url: $(this).attr('action'),
-        method: 'POST',
-        data: formData,
-        processData: false,
-        contentType: false,
-        success: function(response) {
-            $('textarea[name="message"]').val('');
-            $('#attachment').val('');
-            $('#fileNameDisplay').text('No files selected').css('color', '#666'); // Clear file display
-            $('input[name="parent_comment_id"]').remove();
-            loadComments();
-        },
-        error: function(xhr, status, error) {
-            console.error('Error posting comment:', error);
-            alert('Error posting comment. Please try again.');
-        }
-    });
-});
+                e.preventDefault();
+                
+                var formData = new FormData(this);
+                
+                $.ajax({
+                    url: $(this).attr('action'),
+                    method: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        $('textarea[name="message"]').val('');
+                        $('#attachment').val('');
+                        $('#fileNameDisplay').text('No files selected').css('color', '#666'); // Clear file display
+                        $('input[name="parent_comment_id"]').remove();
+                        loadComments();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error posting comment:', error);
+                        alert('Error posting comment. Please try again.');
+                    }
+                });
+            });
 
             // Reply button handler
             $('#profile-feed-1').on('click', '.reply-btn', function(e) {
@@ -1507,6 +1584,149 @@ function buildCommentHtml(comments, level = 0) {
                 isPolling = false;
                 clearInterval(pollInterval);
             });
+
+            // Load files when switching to Files tab
+            $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+                if ($(e.target).attr('href') === '#files-tab') {
+                    loadFiles();
+                }
+            });
+
+            function buildFileListHtml(files) {
+                let html = '';
+                if (files.length === 0) {
+                    return '<div class="alert alert-info">No files uploaded yet.</div>';
+                }
+
+                html = '<div class="file-list">';
+                files.forEach(file => {
+                    const fileName = file.file_data.split('/').pop();
+                    const fileExtension = fileName.split('.').pop().toLowerCase();
+                    const fileSize = file.file_size ? formatFileSize(file.file_size) : 'N/A';
+                    const uploadDate = new Date(file.datetimecreated).toLocaleDateString();
+                    const isImage = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(fileExtension);
+
+                    html += `
+                        <div class="file-item" style="border: 1px solid #ddd; margin: 8px 0; padding: 12px; border-radius: 4px; display: flex; align-items: center; gap: 12px;">
+                            <div class="file-icon" style="font-size: 24px;">
+                                <i class="ace-icon fa ${getFileIcon(fileExtension)}"></i>
+                            </div>
+                            <div class="file-info" style="flex-grow: 1;">
+                                <div class="file-name" style="font-weight: 600;">
+                                    ${fileName}
+                                </div>
+                                <div class="file-meta" style="font-size: 12px; color: #666;">
+                                    <span>Size: ${fileSize}</span>
+                                    <span style="margin-left: 12px;">Uploaded: ${uploadDate}</span>
+                                    <span style="margin-left: 12px;">By: ${file.username}</span>
+                                </div>
+                            </div>
+                            <div class="file-actions">
+                                ${isImage ? `
+                                    <button class="btn btn-xs btn-info preview-btn" data-url="${file.file_data}">
+                                        <i class="ace-icon fa fa-eye"></i>
+                                        Preview
+                                    </button>
+                                ` : ''}
+                                <a href="${file.file_data}" target="_blank" class="btn btn-xs btn-success">
+                                    <i class="ace-icon fa fa-download"></i>
+                                    Download
+                                </a>
+                                ${file.can_delete ? `
+                                    <button class="btn btn-xs btn-danger delete-file-btn" data-file-id="${file.id}">
+                                        <i class="ace-icon fa fa-trash"></i>
+                                        Delete
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                return html;
+            }
+
+            function getFileIcon(extension) {
+                const iconMap = {
+                    'pdf': 'fa-file-pdf-o',
+                    'doc': 'fa-file-word-o',
+                    'docx': 'fa-file-word-o',
+                    'xls': 'fa-file-excel-o',
+                    'xlsx': 'fa-file-excel-o',
+                    'ppt': 'fa-file-powerpoint-o',
+                    'pptx': 'fa-file-powerpoint-o',
+                    'jpg': 'fa-file-image-o',
+                    'jpeg': 'fa-file-image-o',
+                    'png': 'fa-file-image-o',
+                    'gif': 'fa-file-image-o',
+                    'zip': 'fa-file-archive-o',
+                    'rar': 'fa-file-archive-o',
+                    'txt': 'fa-file-text-o'
+                };
+                return iconMap[extension.toLowerCase()] || 'fa-file-o';
+            }
+
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            // Function to load files
+            function loadFiles() {
+                $.ajax({
+                    url: 'get_files.php',
+                    data: { taskId: taskId },
+                    method: 'GET',
+                    success: function(response) {
+                        if (response.success) {
+                            $('#attached-files').html(buildFileListHtml(response.files));
+                        } else {
+                            console.error('Error loading files:', response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error fetching files:', error);
+                    }
+                });
+            }
+
+            // Initial file load
+            loadFiles();
+
+            // Event handlers for file actions
+            $(document).on('click', '.preview-btn', function(e) {
+                e.preventDefault();
+                const imageUrl = $(this).data('url');
+                // Add your image preview logic here (modal, lightbox, etc.)
+            });
+
+            $(document).on('click', '.delete-file-btn', function(e) {
+                e.preventDefault();
+                if (confirm('Are you sure you want to delete this file?')) {
+                    const fileId = $(this).data('file-id');
+                    $.ajax({
+                        url: 'delete_file.php',
+                        method: 'POST',
+                        data: { fileId: fileId },
+                        success: function(response) {
+                            if (response.success) {
+                                loadFiles();
+                            } else {
+                                alert('Error deleting file: ' + response.message);
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('Error deleting file:', error);
+                            alert('Error deleting file. Please try again.');
+                        }
+                    });
+                }
+            });
+
+            // ... rest of your existing code ...
         });
         </script>
         <?php
@@ -1526,13 +1746,13 @@ function buildCommentHtml(comments, level = 0) {
 											<div class="space-6"></div>
 											
 <!-- ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// -->
-<div style=" bottom: 80px; width: 98%; text-align: center;">
+<!-- <div style=" bottom: 80px; width: 98%; text-align: center;">
     <button type="button" class="btn btn-sm btn-primary btn-white btn-round">
         <i class="ace-icon fa fa-rss bigger-150 middle orange2"></i>
         <span class="bigger-110">View more activities</span>
         <i class="icon-on-right ace-icon fa fa-arrow-right"></i>
     </button>
-</div>
+</div> -->
 
 										</div>
 									</div>
@@ -1542,19 +1762,19 @@ function buildCommentHtml(comments, level = 0) {
 									<div id="user-profile-2" class="user-profile">
 										<div class="tabbable">
 											<ul class="nav nav-tabs padding-18">
-												<li class="active">
+                    <li class="active">
 													<a data-toggle="tab" href="#home">
 														<i class="green ace-icon fa fa-user bigger-120"></i>
 														Profile
-													</a>
-												</li>
+                        </a>
+                    </li>
 
 												<li>
 													<a data-toggle="tab" href="#feed">
 														<i class="orange ace-icon fa fa-rss bigger-120"></i>
 														Activity Feed
-													</a>
-												</li>
+                        </a>
+                    </li>
 
 												<li>
 													<a data-toggle="tab" href="#friends">
@@ -1567,9 +1787,9 @@ function buildCommentHtml(comments, level = 0) {
 													<a data-toggle="tab" href="#pictures">
 														<i class="pink ace-icon fa fa-picture-o bigger-120"></i>
 														Pictures
-													</a>
-												</li>
-											</ul>
+                        </a>
+                    </li>
+                </ul>
 
 											<div class="tab-content no-border padding-24">
 												<div id="home" class="tab-pane in active">
@@ -2732,7 +2952,7 @@ function buildCommentHtml(comments, level = 0) {
 																<div class="vspace-12-sm"></div>
 
 																<div class="col-xs-12 col-sm-8">
-																	<div class="form-group">
+                                <div class="form-group">
 																		<label class="col-sm-4 control-label no-padding-right" for="form-field-username">Username</label>
 
 																		<div class="col-sm-8">

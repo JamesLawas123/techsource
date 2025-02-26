@@ -8,21 +8,42 @@ function addComment($mysqlconn, $taskId, $userId, $message, $subject = '', $pare
         return ['status' => 'error', 'message' => 'Either message or attachment is required'];
     }
 
-    $filePath = '';
+     $filePath = '';
     // Handle file upload
     if (!empty($_FILES['attachment']['name'])) {
-        $uploadDir = '../uploaded_attachments/files/';
+        // Use absolute path instead of relative
+        $uploadDir = __DIR__ . '/uploadspm/';
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0755, true);
         }
-        
+
+        // Determine file type directory
+        $fileType = mime_content_type($_FILES['attachment']['tmp_name']);
+        if (strpos($fileType, 'image/') === 0) {
+            $typeDir = 'images/';
+        } else if (strpos($fileType, 'application/') === 0) {
+            $typeDir = 'docfiles/';
+        } else {
+            $typeDir = '';
+        }
+
+        // Create type-specific directory if it doesn't exist
+        if ($typeDir && !is_dir($uploadDir . $typeDir)) {
+            if (!mkdir($uploadDir . $typeDir, 0755, true)) {
+                return ['status' => 'error', 'message' => 'Failed to create type-specific directory'];
+            }
+        }
+
         // Remove the timestamp prefix
         $fileName = basename($_FILES['attachment']['name']);
-        $filePath = $uploadDir . $fileName;
+        $filePath = $uploadDir . $typeDir . $fileName;
         
         if (!move_uploaded_file($_FILES['attachment']['tmp_name'], $filePath)) {
             return ['status' => 'error', 'message' => 'File upload failed'];
         }
+
+        // Store relative path in database
+        $filePath = 'uploadspm/' . $typeDir . $fileName;
     }
 
     $subject = mysqli_real_escape_string($mysqlconn, $subject);

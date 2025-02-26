@@ -7,36 +7,61 @@ header('Content-Type: application/json');
 
 function uploadFile($mysqlconn, $taskId, $userId, $file) {
     try {
-        // Create uploads directory if it doesn't exist
-        $uploadDir = 'uploads/';
+        // Use absolute path instead of relative
+        $uploadDir = __DIR__ . '/uploadspm/';
         if (!is_dir($uploadDir)) {
             if (!mkdir($uploadDir, 0755, true)) {
                 throw new Exception('Failed to create upload directory');
             }
         }
 
-        // Generate unique filename
-        $fileName = uniqid() . '_' . basename($file['name']);
-        $filePath = $uploadDir . $fileName;
+        // Determine file type directory
+        $fileType = mime_content_type($file['tmp_name']);
+        if (strpos($fileType, 'image/') === 0) {
+            $typeDir = 'images/';
+        } else if (strpos($fileType, 'application/') === 0) {
+            $typeDir = 'docfiles/';
+        } else if ($fileType === 'application/octet-stream' || empty($fileType)) {
+            $typeDir = 'others/';
+        } else {
+            $typeDir = 'others/';
+        }
+
+        // Create type-specific directory if it doesn't exist
+        if ($typeDir && !is_dir($uploadDir . $typeDir)) {
+            if (!mkdir($uploadDir . $typeDir, 0755, true)) {
+                throw new Exception('Failed to create type-specific directory');
+            }
+        }
+
+        // Use original filename without unique prefix
+        $fileName = basename($file['name']);
+        $filePath = $uploadDir . $typeDir . $fileName;
 
         // Move uploaded file
         if (!move_uploaded_file($file['tmp_name'], $filePath)) {
             throw new Exception('File move operation failed');
         }
 
-        // Insert file record into database with type 'file'
+        // Store relative path in database
+        $dbFilePath = 'uploadspm/' . $typeDir . $fileName;
+        
+        // Get task subject from the form
+        $taskSubject = $_POST['taskSubjectUp2'];
+
+        // Update SQL to include subject
         $sql = "INSERT INTO pm_threadtb 
-                (taskid, createdbyid, datetimecreated, type, file_data) 
-                VALUES (?, ?, NOW(), 'file', ?)";
+                (taskid, createdbyid, datetimecreated, type, file_data, subject) 
+                VALUES (?, ?, NOW(), 'file', ?, ?)";
         $stmt = $mysqlconn->prepare($sql);
         if (!$stmt) {
             throw new Exception('Database prepare statement failed');
         }
 
-        $stmt->bind_param("iis", $taskId, $userId, $filePath);
+        $stmt->bind_param("iiss", $taskId, $userId, $dbFilePath, $taskSubject);
 
         if ($stmt->execute()) {
-            return ['status' => 'success', 'filename' => $filePath];
+            return ['status' => 'success', 'filename' => $dbFilePath];
         } else {
             unlink($filePath); // Delete the file if DB insert fails
             throw new Exception('Database execution failed');

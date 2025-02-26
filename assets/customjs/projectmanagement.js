@@ -321,6 +321,13 @@ $(document).ready(function() {
 						message: 'The date is not valid. Should be in YYYY-MM-DD'
 					}
                 }
+            },
+			uploadedFiles: {
+                validators: {
+                    notEmpty: {
+                        message: 'Uploaded files here'
+                    }
+                }
             }
 		}
     })
