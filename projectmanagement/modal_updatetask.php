@@ -279,16 +279,21 @@ while($row = mysqli_fetch_assoc($myresult)){
 												<?php 
 													$query66 = "SELECT * FROM pm_threadtb WHERE taskid = '$taskId' AND file_data IS NOT NULL AND file_data != ''";
 													$result66 = mysqli_query($conn, $query66);
-													while($row66 = mysqli_fetch_assoc($result66)){
-														$fileContent = $row66['file_data'];
-														$fileid = $row66['id'];
-														// Extract filename from path
-														$filename = basename($fileContent);
-														$displayName = $filename ? $filename : "File ID: $fileid";
+													if(mysqli_num_rows($result66) > 0) {
+														while($row66 = mysqli_fetch_assoc($result66)){
+															$fileContent = $row66['file_data'];
+															$fileid = $row66['id'];
+															// Extract filename from path
+															$filename = basename($fileContent);
+															$displayName = $filename ? $filename : "File ID: $fileid";
 												?>
 												<option value="<?php echo $fileid;?>">
 													<?php echo $displayName; ?>
 												</option>
+												<?php 
+														}
+													} else { ?>
+														<option value="">There is no uploaded file/s yet.</option>
 												<?php } ?>
 											</select>
 										</span>

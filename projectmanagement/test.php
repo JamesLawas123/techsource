@@ -1311,9 +1311,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 	<div class="col-md-6">
     <div class="widget-box transparent">
-    
-		
-
+    		
         <div class="widget-body">
             <div class="widget-main padding-8">
                 <!-- Tab navigation -->
@@ -1469,11 +1467,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
             function buildCommentHtml(comments, level = 0) {
                 let html = '';
-                comments.forEach(function(comment) {
+                const commentsPerPage = 5; // Number of comments to show initially
+                
+                comments.forEach(function(comment, index) {
                     // Skip comments with type 'file'
                     if (comment.type === 'file') {
                         return;  // Skip this iteration
                     }
+
+                    // Add lazy loading class for comments beyond initial load
+                    const lazyClass = index >= commentsPerPage ? 'lazy-comment hidden' : '';
 
                     let fileHtml = '';
                     if (comment.file_data) {
@@ -1484,8 +1487,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (imageExtensions.includes(fileExtension)) {
                             fileHtml = `
                                 <div style="margin-top: 8px;">
-                                    <img src="${comment.file_data}" alt="Attached Image" 
-                                         style="max-width: 100%; max-height: 200px; border-radius: 4px;">
+                                    <img src="${index < commentsPerPage ? comment.file_data : '#'}" 
+                                         data-src="${comment.file_data}"
+                                         alt="Attached Image" 
+                                         class="${lazyClass}"
+                                         style="max-width: 100%; max-height: 150px; border-radius: 4px;">
                                 </div>
                             `;
                         } else {
@@ -1497,33 +1503,53 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
 
                     html += `
-                        <div class="profile-activity clearfix" style="margin-left: ${level * 40}px; position: relative;">
+                        <div class="profile-activity clearfix ${lazyClass}" style="margin-left: ${level * 40}px; position: relative;">
                             <div style="position: relative;">
-                                <img class="pull-left" alt="${comment.username}'s avatar" src="../assets/images/avatars/avatar5.png" />
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    <a class="user" href="#" style="font-weight: 600; color: #2a6496; text-decoration: none;">${comment.username}</a>
-                                    <div class="comment-text" style="margin: 0; font-size: 14px; line-height: 1.5; color: #555;">
-                                        ${comment.message}
+                                <img class="pull-left" alt="${comment.username}'s avatar" 
+                                     src="${index < commentsPerPage ? '../assets/images/avatars/avatar5.png' : '#'}" 
+                                     data-src="../assets/images/avatars/avatar5.png" />
+                                <div style="margin-left: 50px;"> <!-- Added margin to account for avatar -->
+                                    <div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px;">
+                                        <a class="user" href="#" style="font-weight: 600; color: #2a6496; text-decoration: none;">${comment.username}</a>
+                                        <div class="comment-text" style="font-size: 14px; line-height: 1.5; color: #555;">
+                                            ${comment.message}
+                                        </div>
+                                    </div>
+                                    <div style="margin-top: 8px;">
                                         ${fileHtml}
                                     </div>
-                                </div>
-                                <div class="time" style="font-size: 10px; color: #999; font-weight: 1000;">
-                                    <i class="ace-icon fa fa-clock-o"></i>
-                                    ${comment.time}
-                                    ${comment.parent_id ? '<span class="reply-indicator" style="margin-left: 8px; color: #666; font-size: 10px;"> Replied</span>' : ''}
-                                    <a href="#" class="reply-btn" data-comment-id="${comment.id}" style="margin-left: 8px; padding: 0 4px; background: transparent; border: none; color: #999;">
-                                        <i class="ace-icon fa fa-reply" style="font-size: 10px;"></i>
-                                    </a>
+                                    <div class="time" style="font-size: 10px; color: #999; font-weight: 1000; margin-top: 4px;">
+                                        <i class="ace-icon fa fa-clock-o"></i>
+                                        ${comment.time}
+                                        ${comment.parent_id ? '<span class="reply-indicator" style="margin-left: 8px; color: #666; font-size: 10px;"> Replied</span>' : ''}
+                                        <a href="#" class="reply-btn" data-comment-id="${comment.id}" style="margin-left: 8px; padding: 0 4px; background: transparent; border: none; color: #999;">
+                                            <i class="ace-icon fa fa-reply" style="font-size: 10px;"></i>
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     `;
+                    
                     if (comment.replies && comment.replies.length > 0) {
                         // Sort replies by datetimecreated DESC to show latest replies first
                         comment.replies.sort((a, b) => new Date(b.datetimecreated) - new Date(a.datetimecreated));
                         html += buildCommentHtml(comment.replies, level + 1);
                     }
                 });
+
+                // Add "Load More" button if there are more than commentsPerPage comments
+                if (level === 0 && comments.length > commentsPerPage) {
+                    html += `
+                        <div class="text-center load-more-container">
+                            <button class="btn btn-sm btn-primary load-more-btn">
+                                <i class="ace-icon fa fa-spinner"></i>
+                                Load More Comments
+                            </button>
+                        </div>
+                    `;
+                }
+
                 return html;
             }
 
@@ -1726,7 +1752,54 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
-            // ... rest of your existing code ...
+            // Lazy loading handler
+            $(document).on('click', '.load-more-btn', function() {
+                const $button = $(this);
+                const $container = $('#profile-feed-1');
+                const $hiddenComments = $container.find('.lazy-comment.hidden');
+                
+                // Show next batch of comments
+                $hiddenComments.slice(0, 5).each(function(index) {
+                    const $comment = $(this);
+                    setTimeout(() => {
+                        $comment.removeClass('hidden').addClass('fade-in');
+                        
+                        // Load lazy images
+                        $comment.find('img[data-src]').each(function() {
+                            const $img = $(this);
+                            $img.attr('src', $img.data('src'));
+                        });
+                    }, index * 100); // Stagger the animation
+                });
+
+                // Hide button if no more comments to load
+                if ($hiddenComments.length <= 5) {
+                    $button.parent().fadeOut();
+                }
+            });
+
+            // Intersection Observer for automatic lazy loading
+            if ('IntersectionObserver' in window) {
+                const commentObserver = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const $target = $(entry.target);
+                            if ($target.hasClass('load-more-btn')) {
+                                $target.click();
+                            }
+                        }
+                    });
+                }, {
+                    root: null,
+                    rootMargin: '50px',
+                    threshold: 0.1
+                });
+
+                // Observe the load more button
+                $('.load-more-btn').each(function() {
+                    commentObserver.observe(this);
+                });
+            }
         });
         </script>
         <?php
