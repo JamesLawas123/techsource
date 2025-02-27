@@ -1441,7 +1441,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         <script>
         $(document).ready(function() {
-            const taskId = <?php echo $task_id; ?>;
+            const taskId = <?php echo json_encode($task_id); ?>; // Ensure this variable is properly escaped
             let isPolling = true;
 
             // Function to load comments
@@ -1704,17 +1704,20 @@ document.addEventListener('DOMContentLoaded', function() {
             function loadFiles() {
                 $.ajax({
                     url: 'get_files.php',
-                    data: { taskId: taskId },
+                    data: { taskId: taskId }, // Make sure taskId is defined in the outer scope
                     method: 'GET',
+                    dataType: 'json', // Explicitly specify we expect JSON response
                     success: function(response) {
-                        if (response.success) {
+                        if (response && response.success) {
                             $('#attached-files').html(buildFileListHtml(response.files));
                         } else {
-                            console.error('Error loading files:', response.message);
+                            console.error('Error loading files:', response.message || 'Unknown error');
+                            $('#attached-files').html('<div class="alert alert-warning">Error loading files</div>');
                         }
                     },
                     error: function(xhr, status, error) {
                         console.error('Error fetching files:', error);
+                        $('#attached-files').html('<div class="alert alert-warning">Error loading files</div>');
                     }
                 });
             }
