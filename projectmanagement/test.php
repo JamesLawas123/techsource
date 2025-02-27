@@ -1050,7 +1050,7 @@ if (mysqli_num_rows($task_result) > 0) {
 
 						<div class="page-header">
 							<h1>
-								Thread Page	
+								Thread 	
 								<small>
 									<i class="ace-icon fa fa-angle-double-right"></i>
 
@@ -1619,6 +1619,27 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             function buildFileListHtml(files) {
+                // Add modal HTML if it doesn't exist
+                if (!document.getElementById('imagePreviewModal')) {
+                    document.body.insertAdjacentHTML('beforeend', `
+                        <div class="modal fade" id="imagePreviewModal" tabindex="-1" role="dialog">
+                            <div class="modal-dialog modal-lg" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                        <h4 class="modal-title">Image Preview</h4>
+                                    </div>
+                                    <div class="modal-body text-center">
+                                        <img id="previewImage" src="" alt="Preview" style="max-width: 100%; max-height: 80vh;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `);
+                }
+
                 let html = '';
                 if (files.length === 0) {
                     return '<div class="alert alert-info">No files uploaded yet.</div>';
@@ -1641,35 +1662,36 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <div class="file-name" style="font-weight: 600;">
                                     ${fileName}
                                 </div>
-                                <div class="file-meta" style="font-size: 12px; color: #666;">
-                                    <span>Size: ${fileSize}</span>
-                                    <span style="margin-left: 12px;">Uploaded: ${uploadDate}</span>
-                                    <span style="margin-left: 12px;">By: ${file.username}</span>
+                                <div class="file-meta" style="font-size: 12px; color: #666;">                                
+                                    <span style="margin-left: 12px;">Uploaded: ${uploadDate}</span>                                  
                                 </div>
                             </div>
                             <div class="file-actions">
                                 ${isImage ? `
-                                    <button class="btn btn-xs btn-info preview-btn" data-url="${file.file_data}">
+                                    <a href="${file.file_data}" target="_blank" class="btn btn-xs btn-info">
                                         <i class="ace-icon fa fa-eye"></i>
-                                        Preview
-                                    </button>
-                                ` : ''}
-                                <a href="${file.file_data}" target="_blank" class="btn btn-xs btn-success">
-                                    <i class="ace-icon fa fa-download"></i>
-                                    Download
-                                </a>
-                                ${file.can_delete ? `
-                                    <button class="btn btn-xs btn-danger delete-file-btn" data-file-id="${file.id}">
-                                        <i class="ace-icon fa fa-trash"></i>
-                                        Delete
-                                    </button>
-                                ` : ''}
+                                    </a>
+                                    <a href="${file.file_data}" download="${fileName}" class="btn btn-xs btn-success">
+                                        <i class="ace-icon fa fa-download"></i>
+                                    </a>
+                                ` : `
+                                    <a href="${file.file_data}" download="${fileName}" class="btn btn-xs btn-success">
+                                        <i class="ace-icon fa fa-download"></i>
+                                    </a>
+                                `}
                             </div>
                         </div>
                     `;
                 });
                 html += '</div>';
                 return html;
+            }
+
+            // Add the preview function
+            function previewImage(url) {
+                const previewImage = document.getElementById('previewImage');
+                previewImage.src = url;
+                $('#imagePreviewModal').modal('show');
             }
 
             function getFileIcon(extension) {
