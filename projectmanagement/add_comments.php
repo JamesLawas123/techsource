@@ -2,15 +2,9 @@
 include('../conn/db.php');
 session_start();
 
-function addComment($mysqlconn, $taskId, $userId, $message, $subject = '', $parentId = null) {
-    // Remove the empty message validation
-    if (empty($message) && empty($_FILES['attachment']['name'])) {
-        return ['status' => 'error', 'message' => 'Either message or attachment is required'];
-    }
-
-     $filePath = '';
-    // Handle file upload
-    if (!empty($_FILES['attachment']['name'])) {
+function addComment($mysqlconn, $taskId, $userId, $message, $subject = '', $parentId = null, $file = null) {
+    $filePath = '';
+    if ($file && $file['error'] === UPLOAD_ERR_OK) {
         // Use absolute path instead of relative
         $uploadDir = __DIR__ . '/uploadspm/';
         if (!is_dir($uploadDir)) {
@@ -18,7 +12,7 @@ function addComment($mysqlconn, $taskId, $userId, $message, $subject = '', $pare
         }
 
         // Determine file type directory
-        $fileType = mime_content_type($_FILES['attachment']['tmp_name']);
+        $fileType = mime_content_type($file['tmp_name']);
         if (strpos($fileType, 'image/') === 0) {
             $typeDir = 'images/';
         } else if (strpos($fileType, 'application/') === 0) {
@@ -34,11 +28,10 @@ function addComment($mysqlconn, $taskId, $userId, $message, $subject = '', $pare
             }
         }
 
-        // Remove the timestamp prefix
-        $fileName = basename($_FILES['attachment']['name']);
+        $fileName = basename($file['name']);
         $filePath = $uploadDir . $typeDir . $fileName;
         
-        if (!move_uploaded_file($_FILES['attachment']['tmp_name'], $filePath)) {
+        if (!move_uploaded_file($file['tmp_name'], $filePath)) {
             return ['status' => 'error', 'message' => 'File upload failed'];
         }
 
@@ -46,14 +39,17 @@ function addComment($mysqlconn, $taskId, $userId, $message, $subject = '', $pare
         $filePath = 'uploadspm/' . $typeDir . $fileName;
     }
 
+    // Skip empty messages without files
+    if (empty($message) && empty($filePath)) {
+        return ['status' => 'skip', 'message' => 'Empty message and no file'];
+    }
+
     $subject = mysqli_real_escape_string($mysqlconn, $subject);
     $message = mysqli_real_escape_string($mysqlconn, $message);
-    // Remove newlines from the message
     $message = str_replace(["\r\n", "\n", "\r"], ' ', $message);
     $datetimecreated = date('Y-m-d H:i:s');
     $type = $parentId ? 'reply' : 'comment';
 
-    // Modify SQL to include file_data
     $sql = "INSERT INTO pm_threadtb 
             (taskid, createdbyid, datetimecreated, subject, message, type, parent_id, file_data) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
@@ -83,13 +79,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         die('User not logged in');
     }
 
-    $result = addComment($mysqlconn, $taskId, $userId, $message, $subject, $parentId);
-    
-    if ($result['status'] === 'success') {
+    $success = false;
+
+    // Handle message with or without files
+    if (!empty($message) || empty($_FILES['attachment']['name'][0])) {
+        $result = addComment($mysqlconn, $taskId, $userId, $message, $subject, $parentId);
+        $success = ($result['status'] === 'success');
+    }
+
+    // Handle multiple file uploads as separate comments
+    if (!empty($_FILES['attachment']['name'][0])) {
+        foreach ($_FILES['attachment']['name'] as $key => $value) {
+            if ($_FILES['attachment']['error'][$key] === UPLOAD_ERR_OK) {
+                $file = [
+                    'name' => $_FILES['attachment']['name'][$key],
+                    'type' => $_FILES['attachment']['type'][$key],
+                    'tmp_name' => $_FILES['attachment']['tmp_name'][$key],
+                    'error' => $_FILES['attachment']['error'][$key],
+                    'size' => $_FILES['attachment']['size'][$key],
+                ];
+                
+                $result = addComment($mysqlconn, $taskId, $userId, '', $subject, $parentId, $file);
+                if ($result['status'] === 'success') {
+                    $success = true;
+                }
+            }
+        }
+    }
+
+    if ($success) {
         header('Location: test.php?taskId=' . $taskId);
         exit();
     } else {
-        echo $result['message'];
+        echo "Failed to add comment or upload files";
     }
 }
 ?>

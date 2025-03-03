@@ -1342,7 +1342,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <input type="hidden" name="taskId" value="<?php echo $task_id; ?>">
                                 <input type="hidden" name="subject" value="<?php echo htmlspecialchars($task['subject'] ?? ''); ?>">
                                 <textarea class="form-control" name="message" rows="3" placeholder="Write your message..." ></textarea>
-                                <input type="file" name="attachment" id="attachment" class="form-control" style="display: none;">
+                                <input type="file" name="attachment[]" id="attachment" class="form-control" style="display: none;" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt" title="Maximum 10 files allowed">
                             </div>
                                 <button type="submit" class="btn btn-sm btn-primary">
                                     <i class="ace-icon fa fa-paper-plane"></i>
@@ -1378,8 +1378,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                         if (!$mysqlconn) {
                                             echo '<li class="alert alert-danger">Database connection failed</li>';
                                         } else {
-                                            // Add error checking for the query
-                                            $query66 = "SELECT * FROM pm_threadtb WHERE taskid = ? AND file_data IS NOT NULL AND file_data != ''";
+                                            // Modified query to order by id in descending order
+                                            $query66 = "SELECT * FROM pm_threadtb WHERE taskid = ? AND file_data IS NOT NULL AND file_data != '' ORDER BY id DESC";
                                             $stmt = mysqli_prepare($mysqlconn, $query66);
                                             
                                             if ($stmt) {
@@ -1428,12 +1428,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 const fileInput = this;
                 const fileNameDisplay = document.getElementById('fileNameDisplay');
                 
+                if (fileInput.files.length > 10) {
+                    alert('Maximum 10 files can be uploaded at once');
+                    fileInput.value = ''; // Clear the selection
+                    fileNameDisplay.textContent = 'No files selected';
+                    fileNameDisplay.style.color = '#666';
+                    return;
+                }
+                
                 if (fileInput.files.length > 0) {
-                    const fileName = fileInput.files[0].name;
-                    fileNameDisplay.textContent = fileName;
-                    fileNameDisplay.style.color = '#333'; // Darker color for better visibility
+                    if (fileInput.files.length >= 4) {
+                        fileNameDisplay.textContent = `${fileInput.files.length} files selected`;
+                    } else {
+                        const fileNames = Array.from(fileInput.files).map(file => file.name);
+                        fileNameDisplay.textContent = fileNames.join(', ');
+                    }
+                    fileNameDisplay.style.color = '#333';
                 } else {
-                    fileNameDisplay.textContent = 'No file selected';
+                    fileNameDisplay.textContent = 'No files selected';
                     fileNameDisplay.style.color = '#666';
                 }
             });
@@ -1441,11 +1453,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
         <script>
         $(document).ready(function() {
-            const taskId = <?php echo json_encode($task_id); ?>; // Ensure this variable is properly escaped
+            const taskId = <?php echo json_encode($task_id); ?>;
             let isPolling = true;
+            let loadedCommentsCount = 5; // Track number of loaded comments
 
-            // Function to load comments
             function loadComments() {
+                const scrollPosition = $('#profile-feed-1').scrollTop();
+                
                 $.ajax({
                     url: 'get_comments.php',
                     data: { taskId: taskId },
@@ -1453,11 +1467,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     success: function(comments) {
                         let html = '';
                         if (comments.length > 0) {
-                            html = buildCommentHtml(comments);
+                            html = buildCommentHtml(comments, 0, loadedCommentsCount);
                         } else {
                             html = '<div class="alert alert-info">No messages yet for this task.</div>';
                         }
-                        $('#profile-feed-1').html(html);
+                        
+                        // Compare new content with existing content
+                        const currentContent = $('#profile-feed-1').html();
+                        if (currentContent !== html) {
+                            $('#profile-feed-1').html(html);
+                            $('#profile-feed-1').scrollTop(scrollPosition);
+                        }
                     },
                     error: function(xhr, status, error) {
                         console.error('Error fetching comments:', error);
@@ -1465,18 +1485,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
 
-            function buildCommentHtml(comments, level = 0) {
+            function buildCommentHtml(comments, level = 0, showCount = 5) {
                 let html = '';
-                const commentsPerPage = 5; // Number of comments to show initially
                 
                 comments.forEach(function(comment, index) {
                     // Skip comments with type 'file'
                     if (comment.type === 'file') {
-                        return;  // Skip this iteration
+                        return;
                     }
 
-                    // Add lazy loading class for comments beyond initial load
-                    const lazyClass = index >= commentsPerPage ? 'lazy-comment hidden' : '';
+                    // Add lazy loading class for comments beyond current show count
+                    const lazyClass = index >= showCount ? 'lazy-comment hidden' : '';
 
                     let fileHtml = '';
                     if (comment.file_data) {
@@ -1487,7 +1506,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (imageExtensions.includes(fileExtension)) {
                             fileHtml = `
                                 <div style="margin-top: 8px;">
-                                    <img src="${index < commentsPerPage ? comment.file_data : '#'}" 
+                                    <img src="${index < showCount ? comment.file_data : '#'}" 
                                          data-src="${comment.file_data}"
                                          alt="Attached Image" 
                                          class="${lazyClass}"
@@ -1506,9 +1525,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="profile-activity clearfix ${lazyClass}" style="margin-left: ${level * 40}px; position: relative;">
                             <div style="position: relative;">
                                 <img class="pull-left" alt="${comment.username}'s avatar" 
-                                     src="${index < commentsPerPage ? '../assets/images/avatars/avatar5.png' : '#'}" 
+                                     src="${index < showCount ? '../assets/images/avatars/avatar5.png' : '#'}" 
                                      data-src="../assets/images/avatars/avatar5.png" />
-                                <div style="margin-left: 50px;"> <!-- Added margin to account for avatar -->
+                                <div style="margin-left: 50px;">
                                     <div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px;">
                                         <a class="user" href="#" style="font-weight: 600; color: #2a6496; text-decoration: none;">${comment.username}</a>
                                         <div class="comment-text" style="font-size: 14px; line-height: 1.5; color: #555;">
@@ -1532,14 +1551,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     `;
                     
                     if (comment.replies && comment.replies.length > 0) {
-                        // Sort replies by datetimecreated DESC to show latest replies first
                         comment.replies.sort((a, b) => new Date(b.datetimecreated) - new Date(a.datetimecreated));
-                        html += buildCommentHtml(comment.replies, level + 1);
+                        html += buildCommentHtml(comment.replies, level + 1, showCount);
                     }
                 });
 
-                // Add "Load More" button if there are more than commentsPerPage comments
-                if (level === 0 && comments.length > commentsPerPage) {
+                // Add "Load More" button if there are more comments to show
+                if (level === 0 && comments.length > showCount) {
                     html += `
                         <div class="text-center load-more-container">
                             <button class="btn btn-sm btn-primary load-more-btn">
@@ -1553,15 +1571,51 @@ document.addEventListener('DOMContentLoaded', function() {
                 return html;
             }
 
+            // Modify the load more button handler
+            $(document).on('click', '.load-more-btn', function() {
+                const $button = $(this);
+                const $container = $('#profile-feed-1');
+                const $hiddenComments = $container.find('.lazy-comment.hidden');
+                
+                // Increase the number of shown comments
+                loadedCommentsCount += 5;
+                
+                // Show next batch of comments
+                $hiddenComments.slice(0, 5).each(function(index) {
+                    const $comment = $(this);
+                    setTimeout(() => {
+                        $comment.removeClass('hidden').addClass('fade-in');
+                        
+                        // Load lazy images
+                        $comment.find('img[data-src]').each(function() {
+                            const $img = $(this);
+                            $img.attr('src', $img.data('src'));
+                        });
+                    }, index * 100);
+                });
+
+                // Hide button if no more comments to load
+                if ($hiddenComments.length <= 5) {
+                    $button.parent().fadeOut();
+                }
+            });
+
             // Initial load
             loadComments();
 
-            // Set up polling every 5 seconds
+            // Set up polling with a longer interval (15 seconds instead of 5)
             const pollInterval = setInterval(function() {
-                if (isPolling) {
+                if (isPolling && !document.hidden) { // Only poll when tab is visible
                     loadComments();
                 }
-            }, 5000);
+            }, 15000); // Changed to 15 seconds
+
+            // Add visibility change listener
+            document.addEventListener('visibilitychange', function() {
+                if (!document.hidden && isPolling) {
+                    loadComments(); // Refresh immediately when tab becomes visible
+                }
+            });
 
             // Handle form submission
             $('#commentForm').on('submit', function(e) {
@@ -1597,6 +1651,36 @@ document.addEventListener('DOMContentLoaded', function() {
                 $('textarea[name="message"]').val(`@${username} `).focus();
                 $('input[name="parent_comment_id"]').remove();
                 $('#commentForm').append(`<input type="hidden" name="parent_comment_id" value="${commentId}">`);
+                
+                // Clear any previously selected files
+                $('#attachment').val('');
+                $('#fileNameDisplay').text('No files selected').css('color', '#666');
+            });
+
+            // File selection handler
+            $('#attachment').on('change', function() {
+                const fileInput = this;
+                const fileNameDisplay = $('#fileNameDisplay');
+                
+                if (fileInput.files.length > 10) {
+                    alert('Maximum 10 files can be uploaded at once');
+                    fileInput.value = ''; // Clear the selection
+                    fileNameDisplay.text('No files selected').css('color', '#666');
+                    return;
+                }
+                
+                if (fileInput.files.length > 0) {
+                    if (fileInput.files.length >= 4) {
+                        fileNameDisplay.textContent = `${fileInput.files.length} files selected`;
+                    } else {
+                        const fileNames = Array.from(fileInput.files).map(file => file.name);
+                        fileNameDisplay.textContent = fileNames.join(', ');
+                    }
+                    fileNameDisplay.style.color = '#333';
+                } else {
+                    fileNameDisplay.textContent = 'No files selected';
+                    fileNameDisplay.style.color = '#666';
+                }
             });
 
             // Refresh button handler
@@ -1783,6 +1867,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 const $container = $('#profile-feed-1');
                 const $hiddenComments = $container.find('.lazy-comment.hidden');
                 
+                // Increase the number of shown comments
+                loadedCommentsCount += 5;
+                
                 // Show next batch of comments
                 $hiddenComments.slice(0, 5).each(function(index) {
                     const $comment = $(this);
@@ -1794,7 +1881,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             const $img = $(this);
                             $img.attr('src', $img.data('src'));
                         });
-                    }, index * 100); // Stagger the animation
+                    }, index * 100);
                 });
 
                 // Hide button if no more comments to load

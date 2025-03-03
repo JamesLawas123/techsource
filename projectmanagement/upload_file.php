@@ -86,6 +86,11 @@ try {
         throw new Exception('No file uploaded or file upload error');
     }
 
+    // Add file count validation
+    if (count($_FILES['file']['name']) > 10) {
+        throw new Exception('Maximum 10 files can be uploaded at once');
+    }
+
     // Validate required parameters
     if (!isset($_POST['taskId']) || !isset($_SESSION['userid'])) {
         throw new Exception('Missing required parameters');
