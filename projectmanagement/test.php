@@ -1551,7 +1551,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     `;
                     
                     if (comment.replies && comment.replies.length > 0) {
-                        comment.replies.sort((a, b) => new Date(b.datetimecreated) - new Date(a.datetimecreated));
+                        // Sort replies in reverse chronological order (newest first)
+                        comment.replies.sort((a, b) => new Date(a.time) - new Date(b.time)).reverse();
                         html += buildCommentHtml(comment.replies, level + 1, showCount);
                     }
                 });

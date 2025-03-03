@@ -47,7 +47,6 @@ function addReply($mysqlconn, $taskId, $userId, $message, $subject = '', $parent
 
     $subject = mysqli_real_escape_string($mysqlconn, $subject);
     $message = mysqli_real_escape_string($mysqlconn, $message);
-    $message = str_replace(["\r\n", "\n", "\r"], ' ', $message);
     $datetimecreated = date('Y-m-d H:i:s');
 
     $sql = "INSERT INTO pm_threadtb 
