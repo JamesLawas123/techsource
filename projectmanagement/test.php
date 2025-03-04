@@ -1578,9 +1578,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const $container = $('#profile-feed-1');
                 const $hiddenComments = $container.find('.lazy-comment.hidden');
                 
-                // Increase the number of shown comments
-                loadedCommentsCount += 5;
-                
                 // Show next batch of comments
                 $hiddenComments.slice(0, 5).each(function(index) {
                     const $comment = $(this);
@@ -1867,9 +1864,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const $button = $(this);
                 const $container = $('#profile-feed-1');
                 const $hiddenComments = $container.find('.lazy-comment.hidden');
-                
-                // Increase the number of shown comments
-                loadedCommentsCount += 5;
                 
                 // Show next batch of comments
                 $hiddenComments.slice(0, 5).each(function(index) {
