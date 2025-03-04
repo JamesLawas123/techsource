@@ -18,7 +18,7 @@ try {
     // Query to get files
     $query = "SELECT t.id, t.file_data, t.datetimecreated, u.user_firstname, u.user_lastname 
               FROM pm_threadtb t 
-              LEFT JOIN sys_usertb u ON t.id = u.id
+              LEFT JOIN sys_usertb u ON t.createdbyid = u.id
               WHERE t.taskid = ? AND t.file_data IS NOT NULL AND t.file_data != ''";
     
     $stmt = mysqli_prepare($mysqlconn, $query);
@@ -32,14 +32,22 @@ try {
 
     $files = [];
     while ($row = mysqli_fetch_assoc($result)) {
-        $files[] = [
-            'id' => $row['id'],
-            'file_data' => $row['file_data'],
-            'datetimecreated' => $row['datetimecreated'],
-            'username' => $row['user_firstname'] . ' ' . $row['user_lastname'],
-            // Add can_delete logic if needed
-            'can_delete' => true // Or implement your permission logic here
-        ];
+        // Split the comma-separated file paths
+        $filePaths = explode(',', $row['file_data']);
+        
+        // Create an entry for each file
+        foreach ($filePaths as $filePath) {
+            if (!empty($filePath)) {
+                $files[] = [
+                    'id' => $row['id'],
+                    'file_data' => trim($filePath), // Remove any whitespace
+                    'datetimecreated' => $row['datetimecreated'],
+                    'username' => $row['user_firstname'] . ' ' . $row['user_lastname'],
+                    // Add can_delete logic if needed
+                    'can_delete' => true // Or implement your permission logic here
+                ];
+            }
+        }
     }
 
     echo json_encode([

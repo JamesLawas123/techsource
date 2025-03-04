@@ -111,7 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($success) {
-        header('Location: test.php?taskId=' . $taskId);
+        header('Location: threadPage.php?taskId=' . $taskId);
         exit();
     } else {
         echo "Failed to add reply or upload files";

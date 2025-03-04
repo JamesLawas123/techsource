@@ -1498,27 +1498,39 @@ document.addEventListener('DOMContentLoaded', function() {
                     const lazyClass = index >= showCount ? 'lazy-comment hidden' : '';
 
                     let fileHtml = '';
-                    if (comment.file_data) {
-                        const fileName = comment.file_data.split('/').pop();
-                        const fileExtension = fileName.split('.').pop().toLowerCase();
-                        const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
+                    if (comment.files && comment.files.length > 0) {
+                        fileHtml = '<div class="attached-files" style="margin-top: 8px;">';
                         
-                        if (imageExtensions.includes(fileExtension)) {
-                            fileHtml = `
-                                <div style="margin-top: 8px;">
-                                    <img src="${index < showCount ? comment.file_data : '#'}" 
-                                         data-src="${comment.file_data}"
-                                         alt="Attached Image" 
-                                         class="${lazyClass}"
-                                         style="max-width: 100%; max-height: 150px; border-radius: 4px;">
-                                </div>
-                            `;
-                        } else {
-                            fileHtml = `<a href="${comment.file_data}" target="_blank" class="btn btn-xs btn-info" style="margin-left: 8px;">
-                                <i class="ace-icon fa fa-paperclip"></i>
-                                ${fileName}
-                            </a>`;
-                        }
+                        comment.files.forEach(filePath => {
+                            const fileName = filePath.split('/').pop();
+                            const fileExtension = fileName.split('.').pop().toLowerCase();
+                            const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
+                            
+                            if (imageExtensions.includes(fileExtension)) {
+                                fileHtml += `
+                                    <div style="display: inline-block; margin-right: 10px; margin-bottom: 10px;">
+                                        <img src="${index < showCount ? filePath : '#'}" 
+                                             data-src="${filePath}"
+                                             alt="Attached Image" 
+                                             class="${lazyClass}"
+                                             style="max-width: 150px; max-height: 150px; border-radius: 4px; cursor: pointer;"
+                                             onclick="previewImage('${filePath}')">
+                                    </div>
+                                `;
+                            } else {
+                                fileHtml += `
+                                    <a href="${filePath}" 
+                                       target="_blank" 
+                                       class="btn btn-xs btn-info" 
+                                       style="margin-right: 8px; margin-bottom: 8px;">
+                                        <i class="ace-icon fa fa-paperclip"></i>
+                                        ${fileName}
+                                    </a>
+                                `;
+                            }
+                        });
+                        
+                        fileHtml += '</div>';
                     }
 
                     html += `
@@ -1534,9 +1546,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                             ${comment.message}
                                         </div>
                                     </div>
-                                    <div style="margin-top: 8px;">
-                                        ${fileHtml}
-                                    </div>
+                                    ${fileHtml}
                                     <div class="time" style="font-size: 10px; color: #999; font-weight: 1000; margin-top: 4px;">
                                         <i class="ace-icon fa fa-clock-o"></i>
                                         ${comment.time}
@@ -1551,7 +1561,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     `;
                     
                     if (comment.replies && comment.replies.length > 0) {
-                        // Sort replies in reverse chronological order (newest first)
                         comment.replies.sort((a, b) => new Date(a.time) - new Date(b.time)).reverse();
                         html += buildCommentHtml(comment.replies, level + 1, showCount);
                     }

@@ -21,6 +21,13 @@ function buildCommentTree($comments, $parentId = null) {
     $branch = array();
     foreach ($comments as $comment) {
         if ($comment['parent_id'] == $parentId) {
+            // Process file_data into array if it exists
+            if (!empty($comment['file_data'])) {
+                $comment['files'] = explode(',', $comment['file_data']);
+            } else {
+                $comment['files'] = [];
+            }
+            
             $children = buildCommentTree($comments, $comment['id']);
             if ($children) {
                 $comment['replies'] = $children;
@@ -51,7 +58,7 @@ if (mysqli_num_rows($result) > 0) {
             'username' => $row['username'],
             'message' => $row['message'],
             'time' => time_elapsed_string($row['datetimecreated']),
-            'file_data' => $row['file_data'] // Add this line to include file data
+            'file_data' => $row['file_data']
         );
     }
 }
