@@ -44,9 +44,21 @@ function uploadFiles($mysqlconn, $taskId, $userId, $files) {
                 }
             }
 
-            // Use original filename with timestamp to prevent duplicates
-            $safeFileName = time() . '_' . basename($fileName);
+            // Use original filename
+            $safeFileName = basename($fileName);
             $filePath = $uploadDir . $typeDir . $safeFileName;
+            
+            // If file exists, append number to filename
+            $counter = 1;
+            $fileInfo = pathinfo($safeFileName);
+            $originalName = $fileInfo['filename'];
+            $extension = isset($fileInfo['extension']) ? '.' . $fileInfo['extension'] : '';
+            
+            while (file_exists($filePath)) {
+                $safeFileName = $originalName . '_' . $counter . $extension;
+                $filePath = $uploadDir . $typeDir . $safeFileName;
+                $counter++;
+            }
 
             // Move uploaded file
             if (!move_uploaded_file($files['tmp_name'][$key], $filePath)) {
@@ -57,7 +69,7 @@ function uploadFiles($mysqlconn, $taskId, $userId, $files) {
             $dbFilePath = 'uploadspm/' . $typeDir . $safeFileName;
             $filePaths[] = $dbFilePath;
             $uploadedFiles[] = [
-                'name' => $fileName,
+                'name' => $safeFileName,
                 'path' => $dbFilePath
             ];
         }
