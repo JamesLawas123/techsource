@@ -1344,20 +1344,30 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <textarea class="form-control" name="message" rows="3" placeholder="Write your message..." ></textarea>
                                 <input type="file" name="attachment[]" id="attachment" class="form-control" style="display: none;" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt" title="Maximum 10 files allowed">
                             </div>
-                                <button type="submit" class="btn btn-sm btn-primary">
-                                    <i class="ace-icon fa fa-paper-plane"></i>
-                                    Send
-                                </button>
-								<div class="widget-toolbar action-buttons" style="display: flex; align-items: center; gap: 8px;">
-                            <label for="attachment" style="cursor: pointer; margin: 0;">
-                                <i class="ace-icon fa fa-upload"></i>                
-                            </label>
-                        </div>
-                        <div class="widget-toolbar action-buttons">
-                            <span id="fileNameDisplay" style="font-size: 12px; color: #666; margin-left: 4px;">
-                            No files selected
-                            </span>
-                        </div>  
+                            <div style="display: flex; gap: 8px; align-items: center; justify-content: space-between;">
+                                <div style="display: flex; gap: 8px; align-items: center;">
+                                    <button type="submit" class="btn btn-sm btn-primary">
+                                        <i class="ace-icon fa fa-paper-plane"></i>
+                                        Send
+                                    </button>
+                                    <button type="button" id="cancelReply" class="btn btn-sm btn-danger" style="display: none;">
+                                        <i class="ace-icon fa fa-times"></i>
+                                        Cancel Reply
+                                    </button>
+                                </div>
+                                <div style="display: flex; gap: 8px; align-items: center;">
+								<div class="widget-toolbar action-buttons">
+                                        <span id="fileNameDisplay" style="font-size: 12px; color: #666; margin-left: 4px;">
+                                            No files selected
+                                        </span>
+                                    </div>
+                                    <div class="widget-toolbar action-buttons">
+                                        <label for="attachment" style="cursor: pointer; margin: 0;">
+                                            <i class="ace-icon fa fa-upload"></i>                
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
                             </form>
                         </div>
 
@@ -1641,6 +1651,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         $('#attachment').val('');
                         $('#fileNameDisplay').text('No files selected').css('color', '#666'); // Clear file display
                         $('input[name="parent_comment_id"]').remove();
+                        $('#cancelReply').hide(); // Hide cancel button after successful post
                         loadComments();
                     },
                     error: function(xhr, status, error) {
@@ -1658,6 +1669,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 $('textarea[name="message"]').val(`@${username} `).focus();
                 $('input[name="parent_comment_id"]').remove();
                 $('#commentForm').append(`<input type="hidden" name="parent_comment_id" value="${commentId}">`);
+                
+                // Show cancel reply button
+                $('#cancelReply').show();
                 
                 // Clear any previously selected files
                 $('#attachment').val('');
@@ -1916,6 +1930,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     commentObserver.observe(this);
                 });
             }
+
+            // Add cancel reply button handler
+            $('#cancelReply').on('click', function() {
+                // Clear the textarea
+                $('textarea[name="message"]').val('');
+                
+                // Remove the parent comment ID
+                $('input[name="parent_comment_id"]').remove();
+                
+                // Hide the cancel button
+                $(this).hide();
+                
+                // Clear any selected files
+                $('#attachment').val('');
+                $('#fileNameDisplay').text('No files selected').css('color', '#666');
+            });
         });
         </script>
         <?php

@@ -283,14 +283,23 @@ while($row = mysqli_fetch_assoc($myresult)){
 														while($row66 = mysqli_fetch_assoc($result66)){
 															$fileContent = $row66['file_data'];
 															$fileid = $row66['id'];
-															// Extract filename from path
-															$filename = basename($fileContent);
-															$displayName = $filename ? $filename : "File ID: $fileid";
-												?>
-												<option value="<?php echo $fileid;?>">
-													<?php echo $displayName; ?>
-												</option>
-												<?php 
+															
+															// Split multiple files if they're comma-separated
+															$files = explode(',', $fileContent);
+															
+															foreach($files as $file) {
+																$file = trim($file); // Remove any whitespace
+																if(!empty($file)) {
+																	// Extract filename from path
+																	$filename = basename($file);
+																	$displayName = $filename ? $filename : "File ID: $fileid";
+																	?>
+																	<option value="<?php echo $fileid . '|' . $file; ?>">
+																		<?php echo $displayName; ?>
+																	</option>
+																	<?php
+																}
+															}
 														}
 													} else { ?>
 														<option value="">There is no uploaded file/s yet.</option>
@@ -304,13 +313,16 @@ while($row = mysqli_fetch_assoc($myresult)){
 									<label class="block clearfix">Attach File
 										<span class="block input-icon input-icon-left">
 											<div class="input-group">
-												<input type="file" class="form-control" id="attachFile" name="attachFile">
+												<input type="file" class="form-control" id="attachFile" name="attachFile[]" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt">
 												<span class="input-group-btn">
 													<button type="button" class="btn btn-sm btn-primary" id="uploadBtn" name="uploadBtn">
 														<span class="bigger-110">Upload</span>
 														<i class="ace-icon fa fa-arrow-up icon-on-right"></i>
 													</button>
 												</span>
+											</div>
+											<div id="fileNameDisplay" style="margin-top: 5px; font-size: 12px; color: #666;">
+												No files selected
 											</div>
 										</span>
 									</label>
@@ -384,39 +396,64 @@ while($row = mysqli_fetch_assoc($myresult)){
 
 <script type="text/javascript">
     $(document).ready(function() {
-        // Handle file upload button click
-        $('#uploadBtn').click(function() {
-            var fileInput = $('#attachFile')[0].files[0];
-            var taskId = $('#taskIdUp2').val();
-            var userId = $('#taskUseridUp2').val();
+        // Handle file selection display
+        $('#attachFile').on('change', function() {
+            const fileInput = this;
+            const fileNameDisplay = $('#fileNameDisplay');
             
-            // Basic validation - check if file is selected
-            if (!fileInput) {
+            if (fileInput.files.length > 10) {
                 Swal.fire({
                     icon: 'warning',
-                    title: 'No File Selected',
-                    text: 'Please select a file to upload',
+                    title: 'Too Many Files',
+                    text: 'Maximum 10 files can be uploaded at once',
+                    confirmButtonColor: '#3085d6'
+                });
+                fileInput.value = '';
+                fileNameDisplay.text('No files selected').css('color', '#666');
+                return;
+            }
+            
+            if (fileInput.files.length > 0) {
+                const fileNames = fileInput.files.length >= 4 
+                    ? `${fileInput.files.length} files selected`
+                    : Array.from(fileInput.files).map(file => file.name).join(', ');
+                fileNameDisplay.text(fileNames).css('color', '#333');
+            } else {
+                fileNameDisplay.text('No files selected').css('color', '#666');
+            }
+        });
+
+        // Handle file upload
+        $('#uploadBtn').click(function() {
+            const fileInput = $('#attachFile')[0];
+            const files = fileInput.files;
+            
+            if (files.length === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No Files Selected',
+                    text: 'Please select files to upload',
                     confirmButtonColor: '#3085d6'
                 });
                 return;
             }
 
-            // Optional: Validate file size (50MB limit)
-            var maxSize = 50 * 1024 * 1024; // 50MB in bytes
-            if (fileInput.size > maxSize) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'File Too Large',
-                    text: 'Maximum file size allowed is 50MB',
-                    confirmButtonColor: '#3085d6'
-                });
-                return;
+            // Create FormData object
+            const formData = new FormData();
+            
+            // Append each file
+            for (let i = 0; i < files.length; i++) {
+                formData.append('attachFile[]', files[i]);
             }
+            
+            // Append other form data
+            formData.append('taskId', $('#taskIdUp2').val());
+            formData.append('taskSubjectUp2', $('#taskSubjectUp2').val());
             
             // Show loading state
             Swal.fire({
                 title: 'Uploading...',
-                text: 'Please wait while we upload your file',
+                text: 'Please wait while we upload your files',
                 allowOutsideClick: false,
                 showConfirmButton: false,
                 willOpen: () => {
@@ -424,15 +461,10 @@ while($row = mysqli_fetch_assoc($myresult)){
                 }
             });
             
-            var formData = new FormData();
-            formData.append('file', fileInput);
-            formData.append('taskId', taskId);
-            formData.append('userId', userId);
-            formData.append('taskSubjectUp2', $('#taskSubjectUp2').val());
-            
             // Disable upload button
             $('#uploadBtn').prop('disabled', true);
             
+            // Send AJAX request
             $.ajax({
                 url: 'upload_file.php',
                 type: 'POST',
@@ -440,53 +472,48 @@ while($row = mysqli_fetch_assoc($myresult)){
                 processData: false,
                 contentType: false,
                 success: function(response) {
-                    try {
-                        let result = response;
-                        if (typeof response === 'string') {
-                            try {
-                                result = JSON.parse(response);
-                            } catch (e) {
-                                console.log('Response is not JSON:', response);
-                                throw new Error('Invalid response format');
+                    console.log('Upload response:', response);
+                    if (response.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: 'Files uploaded successfully',
+                            confirmButtonColor: '#3085d6'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                location.reload();
                             }
-                        }
-
-                        if (result.status === 'success') {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success!',
-                                text: 'File uploaded successfully',
-                                confirmButtonColor: '#3085d6'
-                            }).then((result) => {
-                                if (result.isConfirmed) {
-                                    location.reload();
-                                }
-                            });
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Upload Failed',
-                                text: result.message || 'Unknown error occurred',
-                                confirmButtonColor: '#3085d6'
-                            });
-                        }
-                    } catch (e) {
-                        console.error('Error processing response:', e);
-                        console.error('Raw response:', response);
+                        });
+                    } else {
                         Swal.fire({
                             icon: 'error',
-                            title: 'Error',
-                            text: 'An error occurred while processing the server response',
+                            title: 'Upload Failed',
+                            text: response.message || 'Unknown error occurred',
                             confirmButtonColor: '#3085d6'
                         });
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error('Upload failed:', status, error);
+                    console.error('Upload error:', {
+                        status: status,
+                        error: error,
+                        response: xhr.responseText
+                    });
+                    
+                    let errorMessage = 'An error occurred during upload';
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        if (response.message) {
+                            errorMessage = response.message;
+                        }
+                    } catch (e) {
+                        console.error('Error parsing response:', e);
+                    }
+                    
                     Swal.fire({
                         icon: 'error',
                         title: 'Upload Failed',
-                        text: error || 'Unknown error occurred',
+                        text: errorMessage,
                         confirmButtonColor: '#3085d6'
                     });
                 },

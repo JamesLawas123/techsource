@@ -5,9 +5,12 @@ session_start();
 // Set header for JSON response
 header('Content-Type: application/json');
 
-function uploadFile($mysqlconn, $taskId, $userId, $file) {
+// Enable error reporting but prevent output
+error_reporting(E_ALL);
+ini_set('display_errors', 0);
+
+function uploadFiles($mysqlconn, $taskId, $userId, $files) {
     try {
-        // Use absolute path instead of relative
         $uploadDir = __DIR__ . '/uploadspm/';
         if (!is_dir($uploadDir)) {
             if (!mkdir($uploadDir, 0755, true)) {
@@ -15,95 +18,123 @@ function uploadFile($mysqlconn, $taskId, $userId, $file) {
             }
         }
 
-        // Determine file type directory
-        $fileType = mime_content_type($file['tmp_name']);
-        if (strpos($fileType, 'image/') === 0) {
-            $typeDir = 'images/';
-        } else if (strpos($fileType, 'application/') === 0) {
-            $typeDir = 'docfiles/';
-        } else if ($fileType === 'application/octet-stream' || empty($fileType)) {
-            $typeDir = 'others/';
-        } else {
-            $typeDir = 'others/';
-        }
+        $uploadedFiles = [];
+        $filePaths = [];
 
-        // Create type-specific directory if it doesn't exist
-        if ($typeDir && !is_dir($uploadDir . $typeDir)) {
-            if (!mkdir($uploadDir . $typeDir, 0755, true)) {
-                throw new Exception('Failed to create type-specific directory');
+        // Process each file
+        foreach ($files['name'] as $key => $fileName) {
+            if ($files['error'][$key] !== UPLOAD_ERR_OK) {
+                continue;
             }
+
+            // Determine file type directory
+            $fileType = mime_content_type($files['tmp_name'][$key]);
+            if (strpos($fileType, 'image/') === 0) {
+                $typeDir = 'images/';
+            } else if (strpos($fileType, 'application/') === 0) {
+                $typeDir = 'docfiles/';
+            } else {
+                $typeDir = 'others/';
+            }
+
+            // Create type-specific directory if it doesn't exist
+            if (!is_dir($uploadDir . $typeDir)) {
+                if (!mkdir($uploadDir . $typeDir, 0755, true)) {
+                    throw new Exception('Failed to create type-specific directory');
+                }
+            }
+
+            // Use original filename with timestamp to prevent duplicates
+            $safeFileName = time() . '_' . basename($fileName);
+            $filePath = $uploadDir . $typeDir . $safeFileName;
+
+            // Move uploaded file
+            if (!move_uploaded_file($files['tmp_name'][$key], $filePath)) {
+                throw new Exception('File move operation failed for ' . $fileName);
+            }
+
+            // Store relative path
+            $dbFilePath = 'uploadspm/' . $typeDir . $safeFileName;
+            $filePaths[] = $dbFilePath;
+            $uploadedFiles[] = [
+                'name' => $fileName,
+                'path' => $dbFilePath
+            ];
         }
 
-        // Use original filename without unique prefix
-        $fileName = basename($file['name']);
-        $filePath = $uploadDir . $typeDir . $fileName;
-
-        // Move uploaded file
-        if (!move_uploaded_file($file['tmp_name'], $filePath)) {
-            throw new Exception('File move operation failed');
+        if (empty($filePaths)) {
+            throw new Exception('No files were successfully uploaded');
         }
 
-        // Store relative path in database
-        $dbFilePath = 'uploadspm/' . $typeDir . $fileName;
-        
-        // Get task subject from the form
-        $taskSubject = $_POST['taskSubjectUp2'];
+        // Store all file paths as a comma-separated string
+        $filePathString = implode(',', $filePaths);
 
-        // Update SQL to include subject
+        // Insert single record with all file paths
         $sql = "INSERT INTO pm_threadtb 
                 (taskid, createdbyid, datetimecreated, type, file_data, subject) 
                 VALUES (?, ?, NOW(), 'file', ?, ?)";
+        
         $stmt = $mysqlconn->prepare($sql);
         if (!$stmt) {
-            throw new Exception('Database prepare statement failed');
+            throw new Exception('Database prepare statement failed: ' . mysqli_error($mysqlconn));
         }
 
-        $stmt->bind_param("iiss", $taskId, $userId, $dbFilePath, $taskSubject);
+        $subject = isset($_POST['taskSubjectUp2']) ? $_POST['taskSubjectUp2'] : '';
+        $stmt->bind_param("iiss", $taskId, $userId, $filePathString, $subject);
 
-        if ($stmt->execute()) {
-            return ['status' => 'success', 'filename' => $dbFilePath];
-        } else {
-            unlink($filePath); // Delete the file if DB insert fails
-            throw new Exception('Database execution failed');
+        if (!$stmt->execute()) {
+            throw new Exception('Database execution failed: ' . $stmt->error);
         }
+
+        return [
+            'status' => 'success',
+            'message' => 'Files uploaded successfully',
+            'files' => $uploadedFiles
+        ];
+
     } catch (Exception $e) {
-        // Clean up if any error occurs
-        if (isset($filePath) && file_exists($filePath)) {
-            unlink($filePath);
+        // Clean up any uploaded files if an error occurs
+        if (!empty($uploadedFiles)) {
+            foreach ($uploadedFiles as $file) {
+                $fullPath = __DIR__ . '/' . $file['path'];
+                if (file_exists($fullPath)) {
+                    unlink($fullPath);
+                }
+            }
         }
         throw $e;
     }
 }
 
 try {
-    // Check request method
+    // Validate request method
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         throw new Exception('Invalid request method');
     }
 
     // Validate file upload
-    if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
-        throw new Exception('No file uploaded or file upload error');
+    if (!isset($_FILES['attachFile']) || empty($_FILES['attachFile']['name'][0])) {
+        throw new Exception('No files uploaded');
     }
 
-    // Add file count validation
-    if (count($_FILES['file']['name']) > 10) {
+    // Validate file count
+    if (count($_FILES['attachFile']['name']) > 10) {
         throw new Exception('Maximum 10 files can be uploaded at once');
     }
 
     // Validate required parameters
-    if (!isset($_POST['taskId']) || !isset($_SESSION['userid'])) {
+    $taskId = isset($_POST['taskId']) ? intval($_POST['taskId']) : 0;
+    $userId = isset($_SESSION['userid']) ? $_SESSION['userid'] : 0;
+
+    if (!$taskId || !$userId) {
         throw new Exception('Missing required parameters');
     }
 
-    $taskId = intval($_POST['taskId']);
-    $userId = $_SESSION['userid'];
-
-    // Process file upload
-    $result = uploadFile($mysqlconn, $taskId, $userId, $_FILES['file']);
+    // Process file uploads
+    $result = uploadFiles($mysqlconn, $taskId, $userId, $_FILES['attachFile']);
     echo json_encode($result);
+
 } catch (Exception $e) {
-    // Handle errors
     http_response_code(500);
     echo json_encode([
         'status' => 'error',
