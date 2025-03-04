@@ -1328,6 +1328,12 @@ document.addEventListener('DOMContentLoaded', function() {
                             Media
                         </a>
                     </li>
+					<li>
+                        <a href="#tasks-tab" role="tab" data-toggle="tab">
+                            <i class="ace-icon fa fa-tasks"></i>
+                            Tasks
+                        </a>
+                    </li>
                 </ul>
 
                 <!-- Tab content -->
@@ -1380,52 +1386,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     <!-- Files tab -->
                     <div class="tab-pane" id="files-tab">
-                        <div id="attached-files" style="max-height: 400px; overflow-y: auto;">
-                            <div class="form-group">
-                                <ul class="list-unstyled">
-                                    <?php 
-                                        // Check if connection exists
-                                        if (!$mysqlconn) {
-                                            echo '<li class="alert alert-danger">Database connection failed</li>';
-                                        } else {
-                                            // Modified query to order by id in descending order
-                                            $query66 = "SELECT * FROM pm_threadtb WHERE taskid = ? AND file_data IS NOT NULL AND file_data != '' ORDER BY id DESC";
-                                            $stmt = mysqli_prepare($mysqlconn, $query66);
-                                            
-                                            if ($stmt) {
-                                                mysqli_stmt_bind_param($stmt, 's', $task_id);
-                                                mysqli_stmt_execute($stmt);
-                                                $result66 = mysqli_stmt_get_result($stmt);
-                                                
-                                                if (mysqli_num_rows($result66) > 0) {
-                                                    while($row66 = mysqli_fetch_assoc($result66)){
-                                                        $fileContent = $row66['file_data'];
-                                                        $fileid = $row66['id'];
-                                                        // Extract filename from path
-                                                        $filename = basename($fileContent);
-                                                        $displayName = $filename ? $filename : "File ID: $fileid";
-                                                        ?>
-                                                        <li class="file-item" style="padding: 10px; border-bottom: 1px solid #eee;">
-                                                            <a href="<?php echo htmlspecialchars($fileContent); ?>" 
-                                                               class="file-info" 
-                                                               download 
-                                                               style="text-decoration: none; color: inherit;">
-                                                                <i class="ace-icon fa fa-file-o"></i>
-                                                                <span class="filename"><?php echo htmlspecialchars($displayName); ?></span>
-                                                            </a>
-                                                        </li>
-                                                        <?php
-                                                    }
-                                                } else {
-                                                    echo '<li class="alert alert-info">No files found</li>';
-                                                }
-                                                mysqli_stmt_close($stmt);
-                                            } else {
-                                                echo '<li class="alert alert-danger">Query preparation failed</li>';
-                                            }
-                                        }
-                                    ?>
-                                </ul>
+                        <div id="attached-files">
+                            <div class="text-center">
+                                <i class="ace-icon fa fa-spinner fa-spin bigger-150 orange2"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tasks tab -->
+                    <div class="tab-pane" id="tasks-tab">
+                        <div id="task-list">
+                            <div class="text-center">
+                                <i class="ace-icon fa fa-spinner fa-spin bigger-150 orange2"></i>
                             </div>
                         </div>
                     </div>
@@ -1716,141 +1688,45 @@ document.addEventListener('DOMContentLoaded', function() {
                 clearInterval(pollInterval);
             });
 
-            // Load files when switching to Files tab
-            $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
-                if ($(e.target).attr('href') === '#files-tab') {
+            // Function to handle hash changes
+            function handleHash() {
+                var hash = window.location.hash || '#threads-tab';
+                $('a[href="' + hash + '"]').tab('show');
+                
+                // Load files if files tab is selected
+                if (hash === '#files-tab') {
                     loadFiles();
                 }
+            }
+
+            // Listen for hash changes
+            $(window).on('hashchange', handleHash);
+
+            // Handle initial hash
+            handleHash();
+
+            // Update hash when tab is changed
+            $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+                window.location.hash = $(e.target).attr('href');
             });
 
-            function buildFileListHtml(files) {
-                // Add modal HTML if it doesn't exist
-                if (!document.getElementById('imagePreviewModal')) {
-                    document.body.insertAdjacentHTML('beforeend', `
-                        <div class="modal fade" id="imagePreviewModal" tabindex="-1" role="dialog">
-                            <div class="modal-dialog modal-lg" role="document">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                            <span aria-hidden="true">&times;</span>
-                                        </button>
-                                        <h4 class="modal-title">Image Preview</h4>
-                                    </div>
-                                    <div class="modal-body text-center">
-                                        <img id="previewImage" src="" alt="Preview" style="max-width: 100%; max-height: 80vh;">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    `);
-                }
-
-                let html = '';
-                if (files.length === 0) {
-                    return '<div class="alert alert-info">No files uploaded yet.</div>';
-                }
-
-                html = '<div class="file-list">';
-                files.forEach(file => {
-                    const fileName = file.file_data.split('/').pop();
-                    const fileExtension = fileName.split('.').pop().toLowerCase();
-                    const fileSize = file.file_size ? formatFileSize(file.file_size) : 'N/A';
-                    const uploadDate = new Date(file.datetimecreated).toLocaleDateString();
-                    const isImage = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(fileExtension);
-
-                    html += `
-                        <div class="file-item" style="border: 1px solid #ddd; margin: 8px 0; padding: 12px; border-radius: 4px; display: flex; align-items: center; gap: 12px;">
-                            <div class="file-icon" style="font-size: 24px;">
-                                <i class="ace-icon fa ${getFileIcon(fileExtension)}"></i>
-                            </div>
-                            <div class="file-info" style="flex-grow: 1;">
-                                <div class="file-name" style="font-weight: 600;">
-                                    ${fileName}
-                                </div>
-                                <div class="file-meta" style="font-size: 12px; color: #666;">                                
-                                    <span style="margin-left: 12px;">Uploaded: ${uploadDate}</span>                                  
-                                </div>
-                            </div>
-                            <div class="file-actions">
-                                ${isImage ? `
-                                    <a href="${file.file_data}" target="_blank" class="btn btn-xs btn-info">
-                                        <i class="ace-icon fa fa-eye"></i>
-                                    </a>
-                                    <a href="${file.file_data}" download="${fileName}" class="btn btn-xs btn-success">
-                                        <i class="ace-icon fa fa-download"></i>
-                                    </a>
-                                ` : `
-                                    <a href="${file.file_data}" download="${fileName}" class="btn btn-xs btn-success">
-                                        <i class="ace-icon fa fa-download"></i>
-                                    </a>
-                                `}
-                            </div>
-                        </div>
-                    `;
-                });
-                html += '</div>';
-                return html;
-            }
-
-            // Add the preview function
-            function previewImage(url) {
-                const previewImage = document.getElementById('previewImage');
-                previewImage.src = url;
-                $('#imagePreviewModal').modal('show');
-            }
-
-            function getFileIcon(extension) {
-                const iconMap = {
-                    'pdf': 'fa-file-pdf-o',
-                    'doc': 'fa-file-word-o',
-                    'docx': 'fa-file-word-o',
-                    'xls': 'fa-file-excel-o',
-                    'xlsx': 'fa-file-excel-o',
-                    'ppt': 'fa-file-powerpoint-o',
-                    'pptx': 'fa-file-powerpoint-o',
-                    'jpg': 'fa-file-image-o',
-                    'jpeg': 'fa-file-image-o',
-                    'png': 'fa-file-image-o',
-                    'gif': 'fa-file-image-o',
-                    'zip': 'fa-file-archive-o',
-                    'rar': 'fa-file-archive-o',
-                    'txt': 'fa-file-text-o'
-                };
-                return iconMap[extension.toLowerCase()] || 'fa-file-o';
-            }
-
-            function formatFileSize(bytes) {
-                if (bytes === 0) return '0 Bytes';
-                const k = 1024;
-                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-                const i = Math.floor(Math.log(bytes) / Math.log(k));
-                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-            }
-
-            // Function to load files
             function loadFiles() {
                 $.ajax({
-                    url: 'get_files.php',
-                    data: { taskId: taskId }, // Make sure taskId is defined in the outer scope
+                    url: 'files_view.php',
+                    data: { taskId: taskId },
                     method: 'GET',
-                    dataType: 'json', // Explicitly specify we expect JSON response
+                    beforeSend: function() {
+                        $('#attached-files').html('<div class="text-center"><i class="ace-icon fa fa-spinner fa-spin bigger-150 orange2"></i></div>');
+                    },
                     success: function(response) {
-                        if (response && response.success) {
-                            $('#attached-files').html(buildFileListHtml(response.files));
-                        } else {
-                            console.error('Error loading files:', response.message || 'Unknown error');
-                            $('#attached-files').html('<div class="alert alert-warning">Error loading files</div>');
-                        }
+                        $('#attached-files').html(response);
                     },
                     error: function(xhr, status, error) {
-                        console.error('Error fetching files:', error);
-                        $('#attached-files').html('<div class="alert alert-warning">Error loading files</div>');
+                        $('#attached-files').html('<div class="alert alert-danger">Error loading files. Please try again.</div>');
+                        console.error('Error loading files:', error);
                     }
                 });
             }
-
-            // Initial file load
-            loadFiles();
 
             // Event handlers for file actions
             $(document).on('click', '.preview-btn', function(e) {
@@ -1946,6 +1822,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 $('#attachment').val('');
                 $('#fileNameDisplay').text('No files selected').css('color', '#666');
             });
+
+            // Load tasks when switching to Tasks tab
+            $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+                if ($(e.target).attr('href') === '#tasks-tab') {
+                    loadTasks();
+                }
+            });
+
+            function loadTasks() {
+                $.ajax({
+                    url: 'tasks_view.php',
+                    data: { taskId: taskId },
+                    method: 'GET',
+                    beforeSend: function() {
+                        $('#task-list').html('<div class="text-center"><i class="ace-icon fa fa-spinner fa-spin bigger-150 orange2"></i></div>');
+                    },
+                    success: function(response) {
+                        $('#task-list').html(response);
+                    },
+                    error: function(xhr, status, error) {
+                        $('#task-list').html('<div class="alert alert-danger">Error loading tasks. Please try again.</div>');
+                        console.error('Error loading tasks:', error);
+                    }
+                });
+            }
         });
         </script>
         <?php
