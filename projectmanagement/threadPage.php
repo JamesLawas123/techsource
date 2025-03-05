@@ -1395,6 +1395,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     <!-- Tasks tab -->
                     <div class="tab-pane" id="tasks-tab">
+                        <div class="clearfix" style="margin-bottom: 10px;">
+                            <button class="btn btn-primary btn-sm pull-right" onclick="showAddTaskModal()">
+                                <i class="ace-icon fa fa-plus"></i>
+                                Add Task
+                            </button>
+                        </div>
                         <div id="task-list">
                             <div class="text-center">
                                 <i class="ace-icon fa fa-spinner fa-spin bigger-150 orange2"></i>

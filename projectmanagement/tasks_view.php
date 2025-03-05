@@ -27,6 +27,11 @@ $myquery = "SELECT DISTINCT pm_projecttasktb.id,pm_projecttasktb.subject,pm_proj
             ORDER BY pm_projecttasktb.datetimecreated ASC";
 ?>
 
+<!-- Add DataTables CSS and JS -->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs/dt-1.10.24/datatables.min.css"/>
+ 
+<script type="text/javascript" src="https://cdn.datatables.net/v/bs/dt-1.10.24/datatables.min.js"></script>
+
 <div style="max-height: 400px; overflow-y: auto;">
     <?php
     $myresult = mysqli_query($mysqlconn, $myquery);
@@ -120,15 +125,19 @@ $myquery = "SELECT DISTINCT pm_projecttasktb.id,pm_projecttasktb.subject,pm_proj
 </div>
 
 <script>
-$(document).ready(function() {
-    // Initialize DataTable if table exists
-    if ($('#dataTables-subtasks').length) {
-        $('#dataTables-subtasks').DataTable({
-            "pageLength": 10,
-            "order": [[0, "asc"]],
-            "responsive": true
-        });
-    }
+// Wait for both jQuery and DataTables to be fully loaded
+window.addEventListener('load', function() {
+    setTimeout(function() {
+        if (typeof jQuery !== 'undefined' && typeof jQuery.fn.DataTable !== 'undefined') {
+            $('#dataTables-subtasks').DataTable({
+                "pageLength": 10,
+                "order": [[0, "asc"]],
+                "responsive": true
+            });
+        } else {
+            console.error('DataTables not loaded properly');
+        }
+    }, 500);
 });
 
 function showUpdateTask(taskId) {
