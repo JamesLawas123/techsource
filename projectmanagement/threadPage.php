@@ -1835,18 +1835,39 @@ document.addEventListener('DOMContentLoaded', function() {
                     url: 'tasks_view.php',
                     data: { taskId: taskId },
                     method: 'GET',
+                    dataType: 'html',
                     beforeSend: function() {
                         $('#task-list').html('<div class="text-center"><i class="ace-icon fa fa-spinner fa-spin bigger-150 orange2"></i></div>');
                     },
                     success: function(response) {
                         $('#task-list').html(response);
+                        // Initialize any necessary plugins or events after content is loaded
+                        if (typeof $.fn.DataTable !== 'undefined') {
+                            if ($.fn.DataTable.isDataTable('#dataTables-subtasks')) {
+                                $('#dataTables-subtasks').DataTable().destroy();
+                            }
+                            if ($('#dataTables-subtasks').length) {
+                                $('#dataTables-subtasks').DataTable({
+                                    "pageLength": 10,
+                                    "order": [[0, "asc"]],
+                                    "responsive": true
+                                });
+                            }
+                        }
                     },
                     error: function(xhr, status, error) {
-                        $('#task-list').html('<div class="alert alert-danger">Error loading tasks. Please try again.</div>');
+                        $('#task-list').html('<div class="alert alert-danger">Error loading tasks: ' + error + '</div>');
                         console.error('Error loading tasks:', error);
                     }
                 });
             }
+
+            // Load tasks immediately when the page loads if we're on the tasks tab
+            $(document).ready(function() {
+                if ($('#tasks-tab').hasClass('active')) {
+                    loadTasks();
+                }
+            });
         });
         </script>
         <?php
