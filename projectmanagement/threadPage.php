@@ -1396,9 +1396,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     <!-- Tasks tab -->
                     <div class="tab-pane" id="tasks-tab">
                         <div class="clearfix" style="margin-bottom: 10px;">
-                            <button class="btn btn-primary btn-sm pull-right" onclick="showAddTaskModal()">
+                            <button class="btn btn-primary btn-sm pull-right" onclick="showAddSubTaskModal()">
                                 <i class="ace-icon fa fa-plus"></i>
-                                Add Task
+                                Add Subtask
                             </button>
                         </div>
                         <div id="task-list">
@@ -3846,6 +3846,32 @@ document.addEventListener('DOMContentLoaded', function() {
 					$('[class*=select2]').remove();
 				});
 			});
+		</script>
+
+		<script type="text/javascript">
+		function showAddSubTaskModal() {
+			// Get the current task ID from the URL or a hidden field
+			var taskId = <?php echo json_encode($task_id ?? ''); ?>;
+			
+			// Load the modal content via AJAX
+			$.get('add_subtask.php', { taskId: taskId }, function(data) {
+				// Create modal if it doesn't exist
+				if (!$('#modal-subtask').length) {
+					$('body').append('<div class="modal fade" id="modal-subtask" tabindex="-1" role="dialog">' +
+						'<div class="modal-dialog modal-lg" role="document">' +
+						'<div class="modal-content"></div>' +
+						'</div>' +
+						'</div>');
+				}
+				
+				// Set the modal content and show it
+				$('#modal-subtask .modal-content').html(data);
+				$('#modal-subtask').modal('show');
+			}).fail(function(jqXHR, textStatus, errorThrown) {
+				console.error('Error loading subtask modal:', errorThrown);
+				alert('Error loading the subtask form. Please try again.');
+			});
+		}
 		</script>
 	</body>
 </html>
