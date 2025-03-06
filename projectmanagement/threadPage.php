@@ -108,16 +108,6 @@ if (mysqli_num_rows($task_result) > 0) {
 		<script src="assets/js/html5shiv.min.js"></script>
 		<script src="assets/js/respond.min.js"></script>
 		<![endif]-->
-
-		<!-- Add these in the head section or before the closing body tag -->
-		<script src="../assets/js/jquery-2.1.4.min.js"></script>
-		<script src="../assets/js/bootstrap.min.js"></script>
-		<script src="../assets/js/jquery-ui.custom.min.js"></script>
-		<script src="../assets/js/chosen.jquery.min.js"></script>
-		<script src="../assets/ckeditor/ckeditor.js"></script>
-		<!-- Add these in the head section -->
-		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-validator/0.5.3/css/bootstrapValidator.min.css"/>
-		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-validator/0.5.3/js/bootstrapValidator.min.js"></script>
 	</head>
 
 	<body class="no-skin">
@@ -1406,9 +1396,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     <!-- Tasks tab -->
                     <div class="tab-pane" id="tasks-tab">
                         <div class="clearfix" style="margin-bottom: 10px;">
-                            <button class="btn btn-primary btn-sm pull-right" id="addSubtaskBtn" data-taskid="<?php echo $task_id; ?>">
+                            <button class="btn btn-primary btn-sm pull-right" onclick="showAddTaskModal()">
                                 <i class="ace-icon fa fa-plus"></i>
-                                Add Subtask
+                                Add Task
                             </button>
                         </div>
                         <div id="task-list">
@@ -1883,10 +1873,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 if ($('#tasks-tab').hasClass('active')) {
                     loadTasks();
                 }
-            });
-
-            $('#addSubtaskBtn').on('click', function() {
-                showAddSubtaskModal($(this).data('taskid'));
             });
         });
         </script>
@@ -3860,69 +3846,6 @@ document.addEventListener('DOMContentLoaded', function() {
 					$('[class*=select2]').remove();
 				});
 			});
-		</script>
-
-		<!-- Add this before the closing </body> tag -->
-		<script type="text/javascript">
-		function showAddSubtaskModal(taskId) {
-			// Create modal container if it doesn't exist
-			if (!$('#modal-form').length) {
-				$('body').append('<div id="modal-form" class="modal fade" tabindex="-1" role="dialog"></div>');
-			}
-			
-			// Load modal content
-			$.get('add_subtask.php', function(response) {
-				$('#modal-form')
-					.html(response)
-					.modal('show')
-					.off('shown.bs.modal')
-					.on('shown.bs.modal', function() {
-						// Destroy existing CKEditor instance if it exists
-						if (CKEDITOR.instances.subtaskDescription) {
-							CKEDITOR.instances.subtaskDescription.destroy();
-						}
-						
-						// Set the parent task ID
-						$('#parentTaskId').val(taskId);
-						
-						// Initialize new CKEditor instance
-						CKEDITOR.replace('subtaskDescription');
-						
-						// Initialize other plugins
-						$('.date-picker').datepicker({
-							autoclose: true,
-							todayHighlight: true
-						});
-						
-						if (!ace.vars['touch']) {
-							$('.chosen-select').chosen({allow_single_deselect: true});
-						}
-						
-						$('#subtaskAssignee').tagsInput({
-							width: 'auto'
-						});
-					});
-			});
-		}
-
-		// Document ready handler
-		$(document).ready(function() {
-			// Remove any existing click handlers
-			$(document).off('click', '#addSubtaskBtn');
-			
-			// Add new click handler
-			$(document).on('click', '#addSubtaskBtn', function() {
-				showAddSubtaskModal($(this).data('taskid'));
-			});
-		});
-
-		// Clean up function for when modal is closed
-		$(document).on('hidden.bs.modal', '#modal-form', function() {
-			if (CKEDITOR.instances.subtaskDescription) {
-				CKEDITOR.instances.subtaskDescription.destroy();
-			}
-			$(this).removeData('bs.modal');
-		});
 		</script>
 	</body>
 </html>
