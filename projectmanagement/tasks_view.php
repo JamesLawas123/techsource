@@ -24,15 +24,13 @@ $myquery = "SELECT DISTINCT pm_projecttasktb.id,pm_projecttasktb.subject,pm_proj
             LEFT JOIN sys_taskstatustb ON sys_taskstatustb.id=pm_projecttasktb.statusid
             LEFT JOIN sys_priorityleveltb ON sys_priorityleveltb.id=pm_projecttasktb.priorityid
             LEFT JOIN sys_projecttb ON sys_projecttb.id=pm_projecttasktb.projectid
+            WHERE pm_projecttasktb.parent_id = '$taskId' 
+            AND pm_projecttasktb.type = 'subtask'
             ORDER BY pm_projecttasktb.datetimecreated ASC";
 ?>
 
-<!-- Add DataTables CSS and JS -->
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs/dt-1.10.24/datatables.min.css"/>
- 
-<script type="text/javascript" src="https://cdn.datatables.net/v/bs/dt-1.10.24/datatables.min.js"></script>
-
-<div style="max-height: 400px; overflow-y: auto;">
+<!-- Simple table with vertical scroll -->
+<div>
     <?php
     $myresult = mysqli_query($mysqlconn, $myquery);
     
@@ -42,104 +40,102 @@ $myquery = "SELECT DISTINCT pm_projecttasktb.id,pm_projecttasktb.subject,pm_proj
         echo '<div class="alert alert-info">No subtasks found for this task.</div>';
     } else {
     ?>
-        <table class="table table-striped table-bordered table-hover" id="dataTables-subtasks">
-            <thead>
-                <tr>
-                    <th></th>
-                    <th>Tracker</th>
-                    <th>Status</th>
-                    <th>Priority</th>
-                    <th>Subject</th>
-                    <th>Assignee</th>
-                    <th>Project</th>
-                    <th>Deadline</th>
-                    <th>Note</th>
-                </tr>
-            </thead>
-            <tbody>
-            <?php 
-            $counter = 1;
-            
-            while($row = mysqli_fetch_assoc($myresult)){
-                $taskId = $row['id'];    
-                $myTaskStatusid = $row['statusid'];    
-                $myTaskDeadline = $row['deadline'];    
-                $myTaskStartdate = $row['startdate'];        
-                $myTaskEnddate = $row['enddate'];    
-                $myTaskPercentage = $row['percentdone'];    
+        <div style="overflow-y: auto; max-height: 400px;">
+            <table class="table table-striped table-bordered table-hover" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th width="5%">No.</th>
+                        <th width="10%">Tracker</th>
+                        <th width="10%">Status</th>
+                        <th width="10%">Priority</th>
+                        <th width="20%">Subject</th>
+                        <th width="15%">Assignee</th>
+                        <th width="15%">Project</th>
+                        <th width="7.5%">Deadline</th>
+                        <th width="7.5%">Note</th>
+                        <th width="5%">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php 
+                $counter = 1;
                 
-                if($myTaskPercentage == 1){
-                    $myEvaluation = "Exact Delivery";
-                }elseif($myTaskPercentage == 2){
-                    $myEvaluation = "Late Delivery";
-                }elseif($myTaskPercentage == 3){
-                    $myEvaluation = "Ahead Delivery";
-                }else{
-                    $myEvaluation = "In-progress";
-                }
-                
-                if($myTaskStatusid == 6){
-                    $myClass = 'success';
-                }elseif($myTaskStatusid == 2){
-                    $myClass = 'info';
-                }elseif($myTaskStatusid == 3){
-                    $myClass = 'warning';
-                }else{
-                    $myClass = 'danger';
+                while($row = mysqli_fetch_assoc($myresult)){
+                    $taskId = $row['id'];    
+                    $myTaskStatusid = $row['statusid'];    
+                    $myTaskDeadline = $row['deadline'];    
+                    $myTaskStartdate = $row['startdate'];        
+                    $myTaskEnddate = $row['enddate'];    
+                    $myTaskPercentage = $row['percentdone'];    
+                    
+                    if($myTaskPercentage == 1){
+                        $myEvaluation = "Exact Delivery";
+                    }elseif($myTaskPercentage == 2){
+                        $myEvaluation = "Late Delivery";
+                    }elseif($myTaskPercentage == 3){
+                        $myEvaluation = "Ahead Delivery";
+                    }else{
+                        $myEvaluation = "In-progress";
+                    }
+                    
+                    if($myTaskStatusid == 6){
+                        $myClass = 'success';
+                    }elseif($myTaskStatusid == 2){
+                        $myClass = 'info';
+                    }elseif($myTaskStatusid == 3){
+                        $myClass = 'warning';
+                    }else{
+                        $myClass = 'danger';
+                    }
+                    ?>
+                    <tr class="<?php echo $myClass; ?>">
+                        <td><?php echo $counter;?></td>
+                        <td><?php echo $row['classification'];?></td>
+                        <td><?php echo $row['statusname'];?></td>
+                        <td><?php echo $row['priorityname'];?></td>
+                        <td><?php echo $row['subject'];?></td>
+                        <td>
+                            <?php
+                            $count = 0;
+                            $myqueryxx2 = "SELECT pm_taskassigneetb.taskid,pm_taskassigneetb.assigneeid,
+                                        sys_usertb.user_firstname,sys_usertb.user_lastname
+                                        FROM pm_taskassigneetb
+                                        LEFT JOIN sys_usertb ON sys_usertb.id=pm_taskassigneetb.assigneeid
+                                        WHERE pm_taskassigneetb.taskid = '$taskId' ";
+                            $myresultxx2 = mysqli_query($mysqlconn, $myqueryxx2);
+                            while($rowxx2 = mysqli_fetch_assoc($myresultxx2)){
+                                if ($count++ > 0) echo ",";
+                                echo $rowxx2['user_firstname'];
+                            }
+                            ?>
+                        </td>
+                        <td><?php echo $row['projectname'];?></td>
+                        <td><?php echo $row['deadline'];?></td>
+                        <td><?php echo $myEvaluation;?></td>
+                        <td>
+                            <button type="button" class="btn btn-primary btn-sm" onclick="showUpdateTask('<?php echo $taskId;?>');">
+                                <i class="fas fa-edit"></i> Update
+                            </button>
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="showUpdateTask('<?php echo $taskId;?>');">
+                                <i class="fas fa-edit"></i> Delete
+                            </button>
+                        </td>
+                    </tr>
+                    <?php
+                    $counter++;
                 }
                 ?>
-                <tr onclick="showUpdateTask('<?php echo $taskId;?>');" class="<?php echo $myClass; ?>" style="cursor: pointer;">
-                    <td><?php echo $counter;?></td>
-                    <td><?php echo $row['classification'];?></td>
-                    <td><?php echo $row['statusname'];?></td>
-                    <td><?php echo $row['priorityname'];?></td>
-                    <td><?php echo $row['subject'];?></td>
-                    <td>
-                        <?php
-                        $count = 0;
-                        $myqueryxx2 = "SELECT pm_taskassigneetb.taskid,pm_taskassigneetb.assigneeid,
-                                    sys_usertb.user_firstname,sys_usertb.user_lastname
-                                    FROM pm_taskassigneetb
-                                    LEFT JOIN sys_usertb ON sys_usertb.id=pm_taskassigneetb.assigneeid
-                                    WHERE pm_taskassigneetb.taskid = '$taskId' ";
-                        $myresultxx2 = mysqli_query($mysqlconn, $myqueryxx2);
-                        while($rowxx2 = mysqli_fetch_assoc($myresultxx2)){
-                            if ($count++ > 0) echo ",";
-                            echo $rowxx2['user_firstname'];
-                        }
-                        ?>
-                    </td>
-                    <td><?php echo $row['projectname'];?></td>
-                    <td><?php echo $row['deadline'];?></td>
-                    <td><?php echo $myEvaluation;?></td>
-                </tr>
-                <?php
-                $counter++;
-            }
-            ?>
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     <?php
     }
     ?>
 </div>
 
 <script>
-// Wait for both jQuery and DataTables to be fully loaded
-window.addEventListener('load', function() {
-    setTimeout(function() {
-        if (typeof jQuery !== 'undefined' && typeof jQuery.fn.DataTable !== 'undefined') {
-            $('#dataTables-subtasks').DataTable({
-                "pageLength": 10,
-                "order": [[0, "asc"]],
-                "responsive": true
-            });
-        } else {
-            console.error('DataTables not loaded properly');
-        }
-    }, 500);
-});
-
 function showUpdateTask(taskId) {
     window.open('threadPage.php?taskId=' + taskId, '_blank');
 }

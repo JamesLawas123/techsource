@@ -11,6 +11,13 @@ $conn = connectionDB();
 <link rel="stylesheet" href="../assets/css/chosen.min.css" />
 
 <div class="modal-body">
+    <style>
+        /* Add this at the top of the modal-body */
+        .modal-dialog {
+            width: 90%; /* Adjust this percentage as needed */
+            max-width: 800px; /* Optional: set a max-width to prevent it from getting too wide */
+        }
+    </style>
     <div id="signup-box" class="signup-box widget-box no-border">
         <div class="widget-body">
             <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><small>×</small></button>
@@ -162,7 +169,17 @@ $conn = connectionDB();
         
         // Create FormData object
         var formData = new FormData($('#subtaskInfo')[0]);
+        
+        // Remove any existing subtaskDescription and add the one from CKEditor
+        formData.delete('subtaskDescription');
         formData.append('subtaskDescription', description);
+
+        // For debugging - log the form data
+        /*
+        for (var pair of formData.entries()) {
+            console.log(pair[0] + ': ' + pair[1]);
+        }
+        */
 
         // Ajax submission
         $.ajax({
@@ -171,26 +188,25 @@ $conn = connectionDB();
             data: formData,
             processData: false,
             contentType: false,
-            success: function(response) {
-                try {
-                    var result = JSON.parse(response);
-                    if(result.success) {
-                        $('#flash5').html('<div class="alert alert-success">' + result.message + '</div>');
-                        setTimeout(function() {
-                            $('#modal-subtask').modal('hide');
-                            if(typeof loadTasks === 'function') {
-                                loadTasks();
-                            }
-                        }, 1500);
-                    } else {
-                        $('#flash5').html('<div class="alert alert-danger">' + result.message + '</div>');
-                    }
-                } catch(e) {
-                    $('#flash5').html('<div class="alert alert-danger">Error processing response</div>');
+            dataType: 'json',
+            success: function(result) {
+                if(result.success) {
+                    $('#flash5').html('<div class="alert alert-success">' + result.message + '</div>');
+                    setTimeout(function() {
+                        $('#modal-subtask').modal('hide');
+                        if(typeof loadTasks === 'function') {
+                            loadTasks();
+                        }
+                    }, 1500);
+                } else {
+                    $('#flash5').html('<div class="alert alert-danger">' + (result.message || 'Unknown error occurred') + '</div>');
                 }
             },
-            error: function() {
-                $('#flash5').html('<div class="alert alert-danger">Error submitting form</div>');
+            error: function(xhr, status, error) {
+                console.log('Status:', status);
+                console.log('Error:', error);
+                console.log('Response:', xhr.responseText);
+                $('#flash5').html('<div class="alert alert-danger">Error submitting form. Please check console for details.</div>');
             }
         });
     });
