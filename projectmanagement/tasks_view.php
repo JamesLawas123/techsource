@@ -148,7 +148,7 @@ $myquery = "SELECT DISTINCT pm_projecttasktb.id,pm_projecttasktb.subject,pm_proj
                             </button>
                         </td>
                         <td>
-                            <button type="button" class="btn btn-danger btn-sm" onclick="showUpdateTask('<?php echo $taskId;?>');">
+                            <button type="button" class="btn btn-danger btn-sm" onclick="softDeleteTask('<?php echo $taskId;?>');">
                                 Delete
                             </button>
                         </td>
@@ -165,6 +165,11 @@ $myquery = "SELECT DISTINCT pm_projecttasktb.id,pm_projecttasktb.subject,pm_proj
     ?>
 </div>
 
+<!-- Make sure these are loaded in this order -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
 $(document).ready(function() {
     $('#subtasksTable').DataTable({
@@ -179,5 +184,54 @@ $(document).ready(function() {
 
 function showUpdateTask(taskId) {
     window.open('threadPage.php?taskId=' + taskId, '_blank');
+}
+
+function softDeleteTask(taskId) {
+    // Test if SweetAlert is working
+    Swal.fire({
+        title: 'Are you sure you want to delete this task?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Confirm'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Perform the AJAX call
+            $.ajax({
+                url: 'soft_delete_task.php',
+                type: 'POST',
+                data: { taskId: taskId },
+                dataType: 'json'
+            })
+            .done(function(response) {
+                if (response.success) {
+                    Swal.fire({
+                        title: 'Deleted!',
+                        text: 'Task has been deleted.',
+                        icon: 'success',
+                        confirmButtonColor: '#3085d6'
+                    }).then((result) => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: response.message || 'Failed to delete task',
+                        icon: 'error',
+                        confirmButtonColor: '#3085d6'
+                    });
+                }
+            })
+            .fail(function() {
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Error occurred while processing the request',
+                    icon: 'error',
+                    confirmButtonColor: '#3085d6'
+                });
+            });
+        }
+    });
 }
 </script>
