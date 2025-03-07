@@ -34,15 +34,44 @@ $conn = connectionDB();
                     <div class="row">
                         <div class="col-lg-6">
                             <div class="form-group">
-                                <label class="block clearfix">Subject
+                                <label class="block clearfix">Project Name
                                     <span class="block input-icon input-icon-left">
-                                        <i class="ace-icon fa fa-user"></i>
-                                        <input class="form-control" placeholder="subtaskSubject" id="subtaskSubject" name="subtaskSubject" />
+                                        <select class="form-control" id="taskProjectOwner" name="taskProjectOwner">
+                                            <option value="">Select Owner</option>
+                                            <?php 
+                                                $query66 = "SELECT id,projectname FROM sys_projecttb WHERE statusid <> 6";
+                                                $result66 = mysqli_query($conn, $query66);
+                                                while($row66 = mysqli_fetch_assoc($result66)){
+                                                    $projectname=mb_convert_case($row66['projectname'], MB_CASE_TITLE, "UTF-8");
+                                                    $projectid=$row66['id'];
+                                            ?>
+                                            <option value="<?php echo $projectid;?>"><?php echo $projectname;?></option>
+                                            <?php } ?>
+                                        </select>
+                                    </span>
+                                </label>
+                            </div>  
+                        </div>  
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label class="block clearfix">Classification
+                                    <span class="block input-icon input-icon-left">
+                                        <select class="form-control" id="taskClassification" name="taskClassification">
+                                            <option value="">Select Classification</option>
+                                            <?php 
+                                                $query66 = "SELECT id,classification FROM sys_taskclassificationtb";
+                                                $result66 = mysqli_query($conn, $query66);
+                                                while($row66 = mysqli_fetch_assoc($result66)){
+                                                    $classification=mb_convert_case($row66['classification'], MB_CASE_TITLE, "UTF-8");
+                                                    $classificationid=$row66['id'];
+                                            ?>
+                                            <option value="<?php echo $classificationid;?>"><?php echo $classification;?></option>
+                                            <?php } ?>
+                                        </select>
                                     </span>
                                 </label>
                             </div>  
                         </div>
-                        
                         <div class="col-lg-6">
                             <div class="form-group">
                                 <label class="block clearfix">Priority Level
@@ -63,12 +92,21 @@ $conn = connectionDB();
                                 </label>
                             </div>  
                         </div>
-
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label class="block clearfix">Subject
+                                    <span class="block input-icon input-icon-left">
+                                        <i class="ace-icon fa fa-user"></i>
+                                        <input class="form-control" placeholder="subtaskSubject" id="subtaskSubject" name="subtaskSubject" />
+                                    </span>
+                                </label>
+                            </div>  
+                        </div>
                         <div class="col-lg-6">
                             <div class="form-group">
                                 <label class="block clearfix">Assignee
                                     <span class="block input-icon input-icon-left">
-                                        <select name="subtaskAssignee" id="subtaskAssignee" class="form-control">
+                                        <select name="subtaskAssignee[]" id="subtaskAssignee" class="form-control chosen-select" multiple>
                                             <option value="">Select Assignee</option>
                                             <?php 
                                                 $query66 = "SELECT id,user_firstname,user_lastname FROM sys_usertb WHERE user_statusid = '1' ";
@@ -140,19 +178,19 @@ $conn = connectionDB();
 <script src="../assets/js/chosen.jquery.min.js"></script>
 
 <script type="text/javascript">
-    $(document).ready(function() {
-        $('#subtaskAssignee').tagsInput({
-            width: 'auto'
-        });
-    });
     CKEDITOR.replace('subtaskDescription');
+    
     $('.date-picker').datepicker({
         autoclose: true,
         todayHighlight: true
     })
     
     if(!ace.vars['touch']) {
-        $('.chosen-select').chosen({allow_single_deselect:true}); 
+        $('.chosen-select').chosen({
+            allow_single_deselect: true,
+            width: '100%',
+            placeholder_text_multiple: "Select Assignee(s)"
+        }); 
         
         $('#chosen-multiple-style .btn').on('click', function(e){
             var target = $(this).find('input[type=radio]');
@@ -173,13 +211,6 @@ $conn = connectionDB();
         // Remove any existing subtaskDescription and add the one from CKEditor
         formData.delete('subtaskDescription');
         formData.append('subtaskDescription', description);
-
-        // For debugging - log the form data
-        /*
-        for (var pair of formData.entries()) {
-            console.log(pair[0] + ': ' + pair[1]);
-        }
-        */
 
         // Ajax submission
         $.ajax({

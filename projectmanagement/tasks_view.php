@@ -41,7 +41,7 @@ $myquery = "SELECT DISTINCT pm_projecttasktb.id,pm_projecttasktb.subject,pm_proj
     } else {
     ?>
         <div style="overflow-y: auto; max-height: 400px;">
-            <table class="table table-striped table-bordered table-hover" style="width: 100%;">
+            <table id="subtasksTable" class="table table-striped table-bordered table-hover" style="width: 100%;">
                 <thead>
                     <tr>
                         <th width="5%">No.</th>
@@ -90,22 +90,52 @@ $myquery = "SELECT DISTINCT pm_projecttasktb.id,pm_projecttasktb.subject,pm_proj
                     ?>
                     <tr class="<?php echo $myClass; ?>">
                         <td><?php echo $counter;?></td>
-                        <td><?php echo $row['classification'];?></td>
+                        <td>
+                            <?php
+                            $classificationQuery = "SELECT classification 
+                                                  FROM sys_taskclassificationtb 
+                                                  WHERE id = '{$row['classificationid']}'";
+                            $classificationResult = mysqli_query($mysqlconn, $classificationQuery);
+                            
+                            if (!$classificationResult) {
+                                echo "Query error: " . mysqli_error($mysqlconn);
+                            } else if (mysqli_num_rows($classificationResult) > 0) {
+                                $classificationRow = mysqli_fetch_assoc($classificationResult);
+                                echo $classificationRow['classification'];
+                            } else {
+                                echo "Unclassified";
+                            }
+                            ?>
+                        </td>
                         <td><?php echo $row['statusname'];?></td>
                         <td><?php echo $row['priorityname'];?></td>
                         <td><?php echo $row['subject'];?></td>
                         <td>
                             <?php
                             $count = 0;
-                            $myqueryxx2 = "SELECT pm_taskassigneetb.taskid,pm_taskassigneetb.assigneeid,
-                                        sys_usertb.user_firstname,sys_usertb.user_lastname
-                                        FROM pm_taskassigneetb
-                                        LEFT JOIN sys_usertb ON sys_usertb.id=pm_taskassigneetb.assigneeid
-                                        WHERE pm_taskassigneetb.taskid = '$taskId' ";
-                            $myresultxx2 = mysqli_query($mysqlconn, $myqueryxx2);
-                            while($rowxx2 = mysqli_fetch_assoc($myresultxx2)){
-                                if ($count++ > 0) echo ",";
-                                echo $rowxx2['user_firstname'];
+                            $assignees = explode(',', $row['assignee']); // Split the comma-separated assignees
+                            $assigneeNames = array();
+                            
+                            foreach ($assignees as $assigneeId) {
+                                if (empty($assigneeId)) continue; // Skip empty values
+                                
+                                $myqueryxx2 = "SELECT sys_usertb.user_firstname, sys_usertb.user_lastname
+                                            FROM sys_usertb 
+                                            WHERE sys_usertb.id = '" . mysqli_real_escape_string($mysqlconn, $assigneeId) . "'";
+                                $myresultxx2 = mysqli_query($mysqlconn, $myqueryxx2);
+                                
+                                if (!$myresultxx2) {
+                                    echo "Query error: " . mysqli_error($mysqlconn);
+                                } else if (mysqli_num_rows($myresultxx2) > 0) {
+                                    $rowxx2 = mysqli_fetch_assoc($myresultxx2);
+                                    $assigneeNames[] = $rowxx2['user_firstname'] . ' ' . $rowxx2['user_lastname'];
+                                }
+                            }
+                            
+                            if (!empty($assigneeNames)) {
+                                echo implode(', ', $assigneeNames);
+                            } else {
+                                echo "Unassigned";
                             }
                             ?>
                         </td>
@@ -114,12 +144,12 @@ $myquery = "SELECT DISTINCT pm_projecttasktb.id,pm_projecttasktb.subject,pm_proj
                         <td><?php echo $myEvaluation;?></td>
                         <td>
                             <button type="button" class="btn btn-primary btn-sm" onclick="showUpdateTask('<?php echo $taskId;?>');">
-                                <i class="fas fa-edit"></i> Update
+                                Edit
                             </button>
                         </td>
                         <td>
                             <button type="button" class="btn btn-danger btn-sm" onclick="showUpdateTask('<?php echo $taskId;?>');">
-                                <i class="fas fa-edit"></i> Delete
+                                Delete
                             </button>
                         </td>
                     </tr>
@@ -136,6 +166,17 @@ $myquery = "SELECT DISTINCT pm_projecttasktb.id,pm_projecttasktb.subject,pm_proj
 </div>
 
 <script>
+$(document).ready(function() {
+    $('#subtasksTable').DataTable({
+        "aaSorting": [],
+        "scrollCollapse": true,	
+        "autoWidth": true,
+        "responsive": true,
+        "bSort": true,
+        "lengthMenu": [ [10, 25, 50, 100, 200, 300, 400, 500], [10, 25, 50, 100, 200, 300, 400, 500] ]
+    });
+});
+
 function showUpdateTask(taskId) {
     window.open('threadPage.php?taskId=' + taskId, '_blank');
 }

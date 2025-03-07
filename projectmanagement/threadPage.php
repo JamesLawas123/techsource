@@ -1131,7 +1131,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <div class="row">
     <!-- Left Column - Task Details -->
-    <div class="col-md-5">
+    <div class="col-md-4">
 		
 		<div class="page-header">
 			<h1 style="display: flex; align-items: center; gap: 8px; ">
@@ -1309,7 +1309,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 	
 
-	<div class="col-md-7">
+	<div class="col-md-8">
     <div class="widget-box transparent">
     		
         <div class="widget-body">
