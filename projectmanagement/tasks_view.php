@@ -143,8 +143,8 @@ $myquery = "SELECT DISTINCT pm_projecttasktb.id,pm_projecttasktb.subject,pm_proj
                         <td><?php echo $row['deadline'];?></td>
                         <td><?php echo $myEvaluation;?></td>
                         <td>
-                            <button type="button" class="btn btn-primary btn-sm" onclick="showUpdateTask('<?php echo $taskId;?>');">
-                                Edit
+                            <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#updateSubtaskModal" onclick="loadSubtaskModal('<?php echo $taskId; ?>')">
+                                Update
                             </button>
                         </td>
                         <td>
@@ -165,19 +165,23 @@ $myquery = "SELECT DISTINCT pm_projecttasktb.id,pm_projecttasktb.subject,pm_proj
     ?>
 </div>
 
+<!-- Add this modal container -->
+<div class="modal fade" id="updateSubtaskModal" tabindex="-1" role="dialog" aria-labelledby="updateSubtaskModalLabel" aria-hidden="true">
+    <!-- Modal content will be loaded here -->
+</div>
+
 <script>
 $(document).ready(function() {
-    $('#subtasksTable').DataTable({
-        "aaSorting": [],
-        "scrollCollapse": true,	
-        "autoWidth": true,
-        "responsive": true,
-        "bSort": true,
-        "lengthMenu": [ [10, 25, 50, 100, 200, 300, 400, 500], [10, 25, 50, 100, 200, 300, 400, 500] ]
-    });
+   
 });
 
 function showUpdateTask(taskId) {
     window.open('threadPage.php?taskId=' + taskId, '_blank');
+}
+
+function loadSubtaskModal(taskId) {
+    $('#updateSubtaskModal').load('modal_updatesubtask.php?taskId=' + taskId, function() {
+        $('#updateSubtaskModal').modal('show');
+    });
 }
 </script>
