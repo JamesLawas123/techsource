@@ -143,7 +143,7 @@ $myquery = "SELECT DISTINCT pm_projecttasktb.id,pm_projecttasktb.subject,pm_proj
                         <td><?php echo $row['deadline'];?></td>
                         <td><?php echo $myEvaluation;?></td>
                         <td>
-                            <button type="button" class="btn btn-primary btn-sm" onclick="showUpdateTask('<?php echo $taskId;?>');">
+                            <button type="button" class="btn btn-primary btn-sm" onclick="showUpdateSubtask('<?php echo $taskId;?>');">
                                 Edit
                             </button>
                         </td>
@@ -182,8 +182,28 @@ $(document).ready(function() {
     });
 });
 
-function showUpdateTask(taskId) {
-    window.open('threadPage.php?taskId=' + taskId, '_blank');
+function showUpdateSubtask(taskId) {
+    $.ajax({
+        url: 'modal_updatesubtask.php',
+        type: 'GET',
+        data: { taskId: taskId },
+        success: function(response) {
+            // Append modal to body if it doesn't exist
+            if (!$('#updateSubtaskModal').length) {
+                $('body').append(response);
+            }
+            // Show the modal
+            $('#updateSubtaskModal').modal('show');
+        },
+        error: function() {
+            Swal.fire({
+                title: 'Error!',
+                text: 'Failed to load the update form',
+                icon: 'error',
+                confirmButtonColor: '#3085d6'
+            });
+        }
+    });
 }
 
 function softDeleteTask(taskId) {
