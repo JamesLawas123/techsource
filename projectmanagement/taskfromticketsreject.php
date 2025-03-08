@@ -17,6 +17,7 @@ $conn = connectionDB();
 				<th>Deadline(expected)</th>
 				<th>Duration</th>
 				<th>Note</th>
+				<th>Actions</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -34,7 +35,7 @@ $conn = connectionDB();
 					LEFT JOIN sys_taskstatustb ON sys_taskstatustb.id=pm_projecttasktb.statusid
 					LEFT JOIN sys_priorityleveltb ON sys_priorityleveltb.id=pm_projecttasktb.priorityid
 					LEFT JOIN sys_projecttb ON sys_projecttb.id=pm_projecttasktb.projectid
-					WHERE pm_projecttasktb.istask = '2' AND pm_projecttasktb.statusid = '3'
+					WHERE pm_projecttasktb.istask = '2' AND pm_projecttasktb.statusid = '2'
 					ORDER BY pm_projecttasktb.datetimecreated ASC";
 		$myresult = mysqli_query($conn, $myquery);
 		while($row = mysqli_fetch_assoc($myresult)){
@@ -68,7 +69,7 @@ $conn = connectionDB();
 			 // from today
 			if($myTaskStatusid == 6){$myClass = 'success';}elseif($myTaskStatusid == 2){$myClass = 'info';}elseif($myTaskStatusid == 3){$myClass = 'warning';}else{$myClass = 'danger';}
 		?>
-			<tr onclick = "showUpdateTask('<?php echo $taskId;?>');" data-toggle="modal" href="#myModal_updateTask" class="<?php echo $myClass; ?>">
+			<tr class="<?php echo $myClass; ?>">
 				<td><?php echo $counter;?></td>
 				<td><?php echo $row['classification'];?></td>
 				<td><?php echo $row['statusname'];?></td>
@@ -78,6 +79,16 @@ $conn = connectionDB();
 				<td><?php echo $row['deadline'];?></td>
 				<td><?php echo $seconds_diff." days";?></td>
 				<td><?php echo $myEvaluation;?></td>
+				<td>
+					<div class="btn-group">
+						<button type="button" class="btn btn-xs btn-info" onclick="showUpdateTask('<?php echo $taskId;?>');" data-toggle="modal" data-target="#myModal_updateTask">
+							<i class="ace-icon fa fa-pencil bigger-120"></i> Edit
+						</button>
+						<a href="threadPage.php?taskId=<?php echo $taskId; ?>" class="btn btn-xs btn-danger">
+							<i class="ace-icon fa fa-arrow-right icon-on-right"></i> Open Thread
+						</a>
+					</div>
+				</td>
 			</tr>
 		
 		</tbody>

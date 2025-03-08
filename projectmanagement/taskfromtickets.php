@@ -21,6 +21,7 @@ $mygroup=strtoupper($_GET['mygroup']);
 				<th>Deadline(expected)</th>
 				<!--<th>Duration</th>-->
 				<th>Note</th>
+				<th>Actions</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -82,31 +83,41 @@ $mygroup=strtoupper($_GET['mygroup']);
 			 // from today
 			if($myTaskStatusid == 6){$myClass = 'success';}elseif($myTaskStatusid == 2){$myClass = 'info';}elseif($myTaskStatusid == 3){$myClass = 'warning';}else{$myClass = 'danger';}
 		?>
-			<tr onclick = "showUpdateTask('<?php echo $taskId;?>');" data-toggle="modal" href="#myModal_updateTask" class="<?php echo $myClass; ?>">
+			<tr class="<?php echo $myClass; ?>">
 				<td><?php echo $counter;?></td>
 				<td><?php echo $row['classification'];?></td>
 				<td><?php echo $row['statusname'];?></td>
 				<td><?php echo $row['priorityname'];?></td>
 				<td>
-															<?php
-																$count = 0;
-																$myqueryxx2 = "SELECT pm_taskassigneetb.taskid,pm_taskassigneetb.assigneeid,
-																			sys_usertb.user_firstname,sys_usertb.user_lastname
-																			FROM pm_taskassigneetb
-																			LEFT JOIN sys_usertb ON sys_usertb.id=pm_taskassigneetb.assigneeid
-																			WHERE pm_taskassigneetb.taskid = '$taskId' ";
-																$myresultxx2 = mysqli_query($conn, $myqueryxx2);
-																while($rowxx2 = mysqli_fetch_assoc($myresultxx2)){
-																	if ($count++ > 0) echo ",";
-																	echo $rowxx2['user_firstname'];
-																}
-															?>
-														</td>
+					<?php
+						$count = 0;
+						$myqueryxx2 = "SELECT pm_taskassigneetb.taskid,pm_taskassigneetb.assigneeid,
+									sys_usertb.user_firstname,sys_usertb.user_lastname
+									FROM pm_taskassigneetb
+									LEFT JOIN sys_usertb ON sys_usertb.id=pm_taskassigneetb.assigneeid
+									WHERE pm_taskassigneetb.taskid = '$taskId' ";
+						$myresultxx2 = mysqli_query($conn, $myqueryxx2);
+						while($rowxx2 = mysqli_fetch_assoc($myresultxx2)){
+							if ($count++ > 0) echo ",";
+							echo $rowxx2['user_firstname'];
+						}
+					?>
+				</td>
 				<td><?php echo $row['subject'];?></td>
 				<td><?php echo $row['projectname'];?></td>
 				<td><?php echo $row['deadline'];?></td>
 				<!--<td><?php echo $seconds_diff." days";?></td>-->
 				<td><?php echo $myEvaluation;?></td>
+				<td>
+					<div class="btn-group">
+						<button type="button" class="btn btn-xs btn-info" onclick="showUpdateTask('<?php echo $taskId;?>');" data-toggle="modal" data-target="#myModal_updateTask">
+							<i class="ace-icon fa fa-pencil bigger-120"></i> Edit
+						</button>
+						<a href="threadPage.php?taskId=<?php echo $taskId; ?>" class="btn btn-xs btn-danger">
+							<i class="ace-icon fa fa-arrow-right icon-on-right"></i> Open Thread
+						</a>
+					</div>
+				</td>
 			</tr>
 	
 		</tbody>

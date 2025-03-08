@@ -44,16 +44,16 @@ $myquery = "SELECT DISTINCT pm_projecttasktb.id,pm_projecttasktb.subject,pm_proj
             <table id="subtasksTable" class="table table-striped table-bordered table-hover" style="width: 100%;">
                 <thead>
                     <tr>
-                        <th width="5%">No.</th>
-                        <th width="10%">Tracker</th>
-                        <th width="10%">Status</th>
-                        <th width="10%">Priority</th>
-                        <th width="20%">Subject</th>
+                        <th width="3%">#</th>
+                        <th width="8%">Tracker</th>
+                        <th width="8%">Status</th>
+                        <th width="8%">Priority</th>
+                        <th width="25%">Subject</th>
                         <th width="15%">Assignee</th>
                         <th width="15%">Project</th>
-                        <th width="7.5%">Deadline</th>
-                        <th width="7.5%">Note</th>
-                        <th width="5%">Action</th>
+                        <th width="8%">Deadline</th>
+                       
+                        <th width="5%">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -90,67 +90,44 @@ $myquery = "SELECT DISTINCT pm_projecttasktb.id,pm_projecttasktb.subject,pm_proj
                     ?>
                     <tr class="<?php echo $myClass; ?>">
                         <td><?php echo $counter;?></td>
-                        <td>
-                            <?php
-                            $classificationQuery = "SELECT classification 
-                                                  FROM sys_taskclassificationtb 
-                                                  WHERE id = '{$row['classificationid']}'";
-                            $classificationResult = mysqli_query($mysqlconn, $classificationQuery);
-                            
-                            if (!$classificationResult) {
-                                echo "Query error: " . mysqli_error($mysqlconn);
-                            } else if (mysqli_num_rows($classificationResult) > 0) {
-                                $classificationRow = mysqli_fetch_assoc($classificationResult);
-                                echo $classificationRow['classification'];
-                            } else {
-                                echo "Unclassified";
-                            }
-                            ?>
-                        </td>
+                        <td><?php echo $row['classification'];?></td>
                         <td><?php echo $row['statusname'];?></td>
                         <td><?php echo $row['priorityname'];?></td>
                         <td><?php echo $row['subject'];?></td>
                         <td>
                             <?php
-                            $count = 0;
-                            $assignees = explode(',', $row['assignee']); // Split the comma-separated assignees
-                            $assigneeNames = array();
+                            $assigneeNames = [];
+                            $assignees = explode(',', $row['assignee']);
                             
                             foreach ($assignees as $assigneeId) {
-                                if (empty($assigneeId)) continue; // Skip empty values
+                                if (empty($assigneeId)) continue;
                                 
-                                $myqueryxx2 = "SELECT sys_usertb.user_firstname, sys_usertb.user_lastname
+                                $myqueryxx2 = "SELECT CONCAT(user_firstname, ' ', user_lastname) AS full_name
                                             FROM sys_usertb 
-                                            WHERE sys_usertb.id = '" . mysqli_real_escape_string($mysqlconn, $assigneeId) . "'";
+                                            WHERE id = '" . mysqli_real_escape_string($mysqlconn, $assigneeId) . "'";
                                 $myresultxx2 = mysqli_query($mysqlconn, $myqueryxx2);
                                 
-                                if (!$myresultxx2) {
-                                    echo "Query error: " . mysqli_error($mysqlconn);
-                                } else if (mysqli_num_rows($myresultxx2) > 0) {
+                                if ($myresultxx2 && mysqli_num_rows($myresultxx2) > 0) {
                                     $rowxx2 = mysqli_fetch_assoc($myresultxx2);
-                                    $assigneeNames[] = $rowxx2['user_firstname'] . ' ' . $rowxx2['user_lastname'];
+                                    $assigneeNames[] = $rowxx2['full_name'];
                                 }
                             }
                             
-                            if (!empty($assigneeNames)) {
-                                echo implode(', ', $assigneeNames);
-                            } else {
-                                echo "Unassigned";
-                            }
+                            echo !empty($assigneeNames) ? implode(', ', $assigneeNames) : "Unassigned";
                             ?>
                         </td>
                         <td><?php echo $row['projectname'];?></td>
-                        <td><?php echo $row['deadline'];?></td>
-                        <td><?php echo $myEvaluation;?></td>
+                        <td><?php echo date('m/d/Y', strtotime($row['deadline']));?></td>
+                        
                         <td>
-                            <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#updateSubtaskModal" onclick="loadSubtaskModal('<?php echo $taskId; ?>')">
-                                Update
-                            </button>
-                        </td>
-                        <td>
-                            <button type="button" class="btn btn-danger btn-sm" onclick="showUpdateTask('<?php echo $taskId;?>');">
-                                Delete
-                            </button>
+                            <div class="btn-group" style="display: flex; gap: 4px;">
+                                <button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#updateSubtaskModal" onclick="loadSubtaskModal('<?php echo $taskId; ?>')">
+                                    <i class="fa fa-edit"></i>
+                                </button>
+                                <button type="button" class="btn btn-danger btn-xs" onclick="showUpdateTask('<?php echo $taskId;?>');">
+                                    <i class="fa fa-trash"></i>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                     <?php
