@@ -415,18 +415,24 @@ while($row = mysqli_fetch_assoc($myresult)){
         // Create FormData object
         var formData = new FormData($('#subtaskInfo')[0]);
         
-        // Add chosen select values to FormData
+        // Handle multiple assignees properly
         var selectedAssignees = $('#taskAssigneeUp2').val();
-        if (selectedAssignees) {
+        if (selectedAssignees && selectedAssignees.length > 0) {
             // Remove any existing values
             formData.delete('taskAssigneeUp2');
-            // Add each selected value
-            selectedAssignees.forEach(function(value) {
-                formData.append('taskAssigneeUp2[]', value);
-            });
+            formData.delete('taskAssigneeUp2[]');
+            
+            // Add each selected value with the proper array syntax for PHP
+            for (var i = 0; i < selectedAssignees.length; i++) {
+                formData.append('taskAssigneeUp2[]', selectedAssignees[i]);
+            }
+        } else {
+            // Ensure we send an empty array if nothing selected
+            formData.append('taskAssigneeUp2[]', '');
         }
         
         // Debug logging
+        console.log('Form data before sending:');
         for (var pair of formData.entries()) {
             console.log(pair[0] + ': ' + pair[1]);
         }
@@ -439,21 +445,33 @@ while($row = mysqli_fetch_assoc($myresult)){
             processData: false,
             contentType: false,
             success: function(response) {
-                console.log('Response:', response);
-                if(response.success) {
-                    $('#flash5').html('<div class="alert alert-success">' + response.message + '</div>');
-                    setTimeout(function() {
-                        $('#updateSubtaskModal').modal('hide');  // UPDATED MODAL ID
-                        if(typeof loadTasks === 'function') {
-                            loadTasks();
-                        }
-                    }, 1500);
-                } else {
-                    $('#flash5').html('<div class="alert alert-danger">' + (response.message || 'Unknown error occurred') + '</div>');
+                try {
+                    // Try to parse the response if it's a string
+                    if (typeof response === 'string') {
+                        response = JSON.parse(response);
+                    }
+                    
+                    console.log('Response:', response);
+                    if(response.success) {
+                        $('#flash5').html('<div class="alert alert-success">' + response.message + '</div>');
+                        setTimeout(function() {
+                            $('#updateSubtaskModal').modal('hide');
+                            if(typeof loadTasks === 'function') {
+                                loadTasks();
+                            }
+                        }, 1500);
+                    } else {
+                        $('#flash5').html('<div class="alert alert-danger">' + (response.message || 'Unknown error occurred') + '</div>');
+                    }
+                } catch(e) {
+                    console.error('Error parsing response:', e, 'Raw response:', response);
+                    $('#flash5').html('<div class="alert alert-danger">Error processing server response.</div>');
                 }
             },
             error: function(xhr, status, error) {
                 console.error('Error:', error);
+                console.error('Status:', status);
+                console.error('Response Text:', xhr.responseText);
                 $('#flash5').html('<div class="alert alert-danger">Error updating task. Please check console for details.</div>');
             }
         });

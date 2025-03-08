@@ -29,9 +29,9 @@ $classificationid = isset($_POST['classificationid']) ? mysqli_real_escape_strin
 $priorityid = isset($_POST['priorityid']) ? mysqli_real_escape_string($conn, $_POST['priorityid']) : '';
 $subject = isset($_POST['subject']) ? mysqli_real_escape_string($conn, $_POST['subject']) : '';
 $description = isset($_POST['description']) ? mysqli_real_escape_string($conn, $_POST['description']) : '';
-$deadline = isset($_POST['deadline']) && !empty($_POST['deadline']) ? mysqli_real_escape_string($conn, $_POST['deadline']) : NULL;
-$startdate = isset($_POST['startdate']) && !empty($_POST['startdate']) ? mysqli_real_escape_string($conn, $_POST['startdate']) : NULL;
-$enddate = isset($_POST['enddate']) && !empty($_POST['enddate']) ? mysqli_real_escape_string($conn, $_POST['enddate']) : NULL;
+$deadline = isset($_POST['deadline']) && !empty($_POST['deadline']) && $_POST['deadline'] != '0000-00-00' ? mysqli_real_escape_string($conn, $_POST['deadline']) : NULL;
+$startdate = isset($_POST['startdate']) && !empty($_POST['startdate']) && $_POST['startdate'] != '0000-00-00' ? mysqli_real_escape_string($conn, $_POST['startdate']) : NULL;
+$enddate = isset($_POST['enddate']) && !empty($_POST['enddate']) && $_POST['enddate'] != '0000-00-00' ? mysqli_real_escape_string($conn, $_POST['enddate']) : NULL;
 $statusid = isset($_POST['statusid']) ? mysqli_real_escape_string($conn, $_POST['statusid']) : '';
 
 // Properly handle the assignees array

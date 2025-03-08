@@ -61,6 +61,9 @@ $myquery = "SELECT DISTINCT pm_projecttasktb.id,pm_projecttasktb.subject,pm_proj
                 $counter = 1;
                 
                 while($row = mysqli_fetch_assoc($myresult)){
+                    // Skip rows where statusid is 5
+                    if($row['statusid'] == 5) continue;
+                    
                     $taskId = $row['id'];    
                     $myTaskStatusid = $row['statusid'];    
                     $myTaskDeadline = $row['deadline'];    
@@ -147,13 +150,19 @@ $myquery = "SELECT DISTINCT pm_projecttasktb.id,pm_projecttasktb.subject,pm_proj
     <!-- Modal content will be loaded here -->
 </div>
 
+<!-- Add this near the bottom of your page -->
+<div class="modal fade" id="deleteSubtaskModal" tabindex="-1" role="dialog" aria-labelledby="deleteSubtaskModalLabel">
+</div>
+
 <script>
 $(document).ready(function() {
    
 });
 
 function showUpdateTask(taskId) {
-    window.open('threadPage.php?taskId=' + taskId, '_blank');
+    $('#deleteSubtaskModal').load('modal_deletesubtask.php?taskId=' + taskId, function() {
+        $('#deleteSubtaskModal').modal('show');
+    });
 }
 
 function loadSubtaskModal(taskId) {
