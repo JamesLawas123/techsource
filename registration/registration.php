@@ -83,6 +83,7 @@ include('proxy.php');
 														<th>Deadline(expected)</th>
 														<!--<th>Duration</th>-->
 														<th>Rate</th>
+														<th>Action</th>
 													</tr>
 												</thead>
 												<tbody>
@@ -129,7 +130,7 @@ include('proxy.php');
 													 // from today
 													if($myTaskStatusid == 6){$myClass = 'success';}elseif($myTaskStatusid == 2){$myClass = 'info';}elseif($myTaskStatusid == 3){$myClass = 'warning';}else{$myClass = 'danger';}
 												?>
-													<tr onclick = "showUpdateTicket('<?php echo $taskId;?>');" data-toggle="modal" href="#myModal_updateTicket" class="<?php echo $myClass; ?>">
+													<tr class="<?php echo $myClass; ?>">
 														<td><?php echo $counter;?></td>
 														<td><?php echo $row['classification'];?></td>
 														<td><?php echo $row['statusname'];?></td>
@@ -139,6 +140,16 @@ include('proxy.php');
 														<td><?php echo "startd:".$row['startdate']."</br>"."deadline:".$row['deadline']."</br>"."deadline:".$row['enddate'];?></td>
 														<!--<td><?php echo $seconds_diff." days";?></td>-->
 														<td><?php echo $myEvaluation;?></td>
+														<td>
+															<div class="btn-group">
+																<button type="button" class="btn btn-xs btn-info" onclick="showUpdateTicket('<?php echo $taskId;?>');" data-toggle="modal" data-target="#myModal_updateTicket">
+																	<i class="ace-icon fa fa-pencil bigger-120"></i> Edit
+																</button>
+																<a href="../projectmanagement/threadPage.php?taskId=<?php echo $taskId; ?>" class="btn btn-xs btn-danger" onclick="event.stopPropagation();">
+																	<i class="ace-icon fa fa-arrow-right icon-on-right"></i> Open Thread
+																</a>
+															</div>
+														</td>
 													</tr>
 												<?php
 													$counter ++;

@@ -66,6 +66,8 @@ while($row = mysqli_fetch_assoc($myresult)){
 <!-- jQuery Tags Input -->
 <link href="../assets/customjs/jquery.tagsinput.css" rel="stylesheet">
 <link rel="stylesheet" href="../assets/css/chosen.min.css" />
+<!-- Add SweetAlert2 CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <div class="modal-body">
 	<!--<div id="signup-box" class="signup-box widget-box no-border">-->
 	<div id="signup-box" class="signup-box widget-box no-border">
@@ -166,6 +168,64 @@ while($row = mysqli_fetch_assoc($myresult)){
 									</label>
 								</div>	
 							</div>
+							
+							<div class="col-lg-6">
+								<div class="form-group">
+									<label class="block clearfix">Uploaded Files
+										<span class="block input-icon input-icon-left">
+											<select class="form-control" id="uploadedFiles" name="uploadedFiles">
+												<?php 
+													$query66 = "SELECT * FROM pm_threadtb WHERE taskid = '$ticketId' AND file_data IS NOT NULL AND file_data != ''";
+													$result66 = mysqli_query($conn, $query66);
+													if(mysqli_num_rows($result66) > 0) {
+														while($row66 = mysqli_fetch_assoc($result66)){
+															$fileContent = $row66['file_data'];
+															$fileid = $row66['id'];
+															
+															// Split multiple files if they're comma-separated
+															$files = explode(',', $fileContent);
+															
+															foreach($files as $file) {
+																$file = trim($file); // Remove any whitespace
+																if(!empty($file)) {
+																	// Extract filename from path
+																	$filename = basename($file);
+																	$displayName = $filename ? $filename : "File ID: $fileid";
+																	?>
+																	<option value="<?php echo $fileid . '|' . $file; ?>">
+																		<?php echo $displayName; ?>
+																	</option>
+																	<?php
+																}
+															}
+														}
+													} else { ?>
+														<option value="">There is no uploaded file/s yet.</option>
+												<?php } ?>
+											</select>
+										</span>
+									</label>
+								</div>
+
+								<div class="form-group">
+									<label class="block clearfix">Attach File
+										<span class="block input-icon input-icon-left">
+											<div class="input-group">
+												<input type="file" class="form-control" id="attachFile" name="attachFile[]" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt">
+												<span class="input-group-btn">
+													<button type="button" class="btn btn-sm btn-primary" id="uploadBtn" name="uploadBtn">
+														<span class="bigger-110">Upload</span>
+														<i class="ace-icon fa fa-arrow-up icon-on-right"></i>
+													</button>
+												</span>
+											</div>
+											<div id="fileNameDisplay" style="margin-top: 5px; font-size: 12px; color: #666;">
+												No files selected
+											</div>
+										</span>
+									</label>
+								</div>
+							</div>
 						
 							<div class="col-lg-6">
 								<div class="form-group">
@@ -224,6 +284,8 @@ while($row = mysqli_fetch_assoc($myresult)){
 <!-- jQuery Tags Input -->
 <script src="../assets/customjs/jquery.tagsinput.js"></script>
 <script src="../assets/js/chosen.jquery.min.js"></script>
+<!-- Add SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script type="text/javascript">
 	$(document).ready(function() {
         $('#taskAssigneeupdate2').tagsInput({
@@ -246,4 +308,159 @@ while($row = mysqli_fetch_assoc($myresult)){
 						 else $('#form-field-select-taskAssigneeUp').removeClass('tag-input-style');
 					});
 				}
+
+
+	// Handle file upload
+	$('#uploadBtn').click(function() {
+		const fileInput = $('#attachFile')[0];
+		const files = fileInput.files;
+		
+		if (files.length === 0) {
+			Swal.fire({
+				icon: 'warning',
+				title: 'No Files Selected',
+				text: 'Please select files to upload',
+				confirmButtonColor: '#3085d6'
+			});
+			return;
+		}
+
+		// Create FormData object
+		const formData = new FormData();
+		
+		// Append each file
+		for (let i = 0; i < files.length; i++) {
+			formData.append('attachFile[]', files[i]);
+		}
+		
+		// Get the ticket ID
+		const ticketId = $('#ticketIdUp2').val();
+		
+		// Add parameters expected by upload_file.php
+		formData.append('ticketId', ticketId);
+		formData.append('taskId', ticketId); // Try both ticketId and taskId
+		formData.append('ticketSubject', $('#ticketSubjectUp2').val());
+		formData.append('userId', $('#ticketUseridUp2').val());
+		
+		// Add commonly required parameters
+		formData.append('action', 'uploadFile');
+		formData.append('module', 'ticketing');
+		
+		// Add form data
+		const formDataObj = $('#ticketInfoUpdate').serializeArray();
+		$.each(formDataObj, function(i, field) {
+			formData.append(field.name, field.value);
+		});
+		
+		console.log('Uploading with the following parameters:');
+		for (let pair of formData.entries()) {
+			if (pair[0] !== 'attachFile[]') { // Don't log binary data
+				console.log(pair[0] + ': ' + pair[1]);
+			} else {
+				console.log(pair[0] + ': ' + pair[1].name);
+			}
+		}
+		
+		// Show loading state
+		Swal.fire({
+			title: 'Uploading...',
+			text: 'Please wait while we upload your files',
+			allowOutsideClick: false,
+			showConfirmButton: false,
+			willOpen: () => {
+				Swal.showLoading();
+			}
+		});
+		
+		// Disable upload button
+		$('#uploadBtn').prop('disabled', true);
+		
+		// Send AJAX request
+		$.ajax({
+			url: '../projectmanagement/upload_file.php',
+			type: 'POST',
+			data: formData,
+			processData: false,
+			contentType: false,
+			success: function(response) {
+				console.log('Raw upload response:', response);
+				// Try to parse the response if it's a string
+				if (typeof response === 'string') {
+					try {
+						response = JSON.parse(response);
+						console.log('Parsed response:', response);
+					} catch (e) {
+						console.error('Error parsing response:', e);
+					}
+				}
+				
+				if (response && response.status === 'success') {
+					Swal.fire({
+						icon: 'success',
+						title: 'Success!',
+						text: 'Files uploaded successfully',
+						confirmButtonColor: '#3085d6'
+					}).then((result) => {
+						if (result.isConfirmed) {
+							location.reload();
+						}
+					});
+				} else {
+					Swal.fire({
+						icon: 'error',
+						title: 'Upload Failed',
+						text: response && response.message ? response.message : 'Unknown error occurred',
+						confirmButtonColor: '#3085d6'
+					});
+				}
+			},
+			error: function(xhr, status, error) {
+				console.error('Upload error details:', {
+					status: status,
+					error: error,
+					statusCode: xhr.status,
+					responseText: xhr.responseText
+				});
+				
+				let errorMessage = 'An error occurred during upload. Server returned: ' + xhr.status;
+				try {
+					const response = JSON.parse(xhr.responseText);
+					if (response.message) {
+						errorMessage = response.message;
+					}
+				} catch (e) {
+					// If response isn't JSON, use the raw response text
+					if (xhr.responseText) {
+						errorMessage = 'Server error: ' + xhr.responseText.substring(0, 200) + '...';
+					}
+					console.error('Error parsing error response:', e);
+				}
+				
+				Swal.fire({
+					icon: 'error',
+					title: 'Upload Failed',
+					text: errorMessage,
+					confirmButtonColor: '#3085d6'
+				});
+			},
+			complete: function() {
+				// Re-enable upload button
+				$('#uploadBtn').prop('disabled', false);
+			}
+		});
+	});
+
+	// Add file name display functionality
+	$('#attachFile').change(function() {
+		const files = this.files;
+		if (files.length > 0) {
+			let fileNames = '';
+			for (let i = 0; i < files.length; i++) {
+				fileNames += files[i].name + (i < files.length - 1 ? ', ' : '');
+			}
+			$('#fileNameDisplay').text(fileNames);
+		} else {
+			$('#fileNameDisplay').text('No files selected');
+		}
+	});
 </script>
