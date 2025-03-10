@@ -5,6 +5,7 @@ ini_set('display_errors', 0);
 
 header('Content-Type: application/json'); // Set JSON header
 
+
 try {
     // Include your database connection
     require_once('../conn/db.php'); // Adjust path as needed

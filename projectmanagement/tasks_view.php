@@ -91,7 +91,7 @@ $myquery = "SELECT DISTINCT pm_projecttasktb.id,pm_projecttasktb.subject,pm_proj
                         $myClass = 'danger';
                     }
                     ?>
-                    <tr class="<?php echo $myClass; ?>">
+                    <tr id="task-row-<?php echo $taskId; ?>" class="<?php echo $myClass; ?>">
                         <td><?php echo $counter;?></td>
                         <td><?php echo $row['classification'];?></td>
                         <td><?php echo $row['statusname'];?></td>
@@ -127,7 +127,7 @@ $myquery = "SELECT DISTINCT pm_projecttasktb.id,pm_projecttasktb.subject,pm_proj
                                 <button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#updateSubtaskModal" onclick="loadSubtaskModal('<?php echo $taskId; ?>')">
                                     <i class="fa fa-edit"></i>
                                 </button>
-                                <button type="button" class="btn btn-danger btn-xs" onclick="showUpdateTask('<?php echo $taskId;?>');">
+                                <button type="button" class="btn btn-danger btn-xs" onclick="deleteTask('<?php echo $taskId;?>');">
                                     <i class="fa fa-trash"></i>
                                 </button>
                             </div>
@@ -159,10 +159,31 @@ $(document).ready(function() {
    
 });
 
-function showUpdateTask(taskId) {
-    $('#deleteSubtaskModal').load('modal_deletesubtask.php?taskId=' + taskId, function() {
-        $('#deleteSubtaskModal').modal('show');
-    });
+function deleteTask(taskId) {
+    if (confirm('Are you sure you want to delete this task?')) {
+        $.ajax({
+            type: 'POST',
+            url: 'delete_task.php',
+            data: { taskId: taskId },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    // Remove the task row from the table
+                    $('#task-row-' + taskId).fadeOut(400, function() {
+                        $(this).remove();
+                    });
+                    // Optional: Refresh the page to update any related data
+                    location.reload();
+                } else {
+                    alert('Error: ' + (response.message || 'Failed to delete task'));
+                }
+            },
+            error: function(xhr, status, error) {
+                console.log(xhr.responseText);
+                alert('Error connecting to the server');
+            }
+        });
+    }
 }
 
 function loadSubtaskModal(taskId) {
