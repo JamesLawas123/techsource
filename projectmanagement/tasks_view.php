@@ -160,30 +160,9 @@ $(document).ready(function() {
 });
 
 function deleteTask(taskId) {
-    if (confirm('Are you sure you want to delete this task?')) {
-        $.ajax({
-            type: 'POST',
-            url: 'delete_task.php',
-            data: { taskId: taskId },
-            dataType: 'json',
-            success: function(response) {
-                if (response.success) {
-                    // Remove the task row from the table
-                    $('#task-row-' + taskId).fadeOut(400, function() {
-                        $(this).remove();
-                    });
-                    // Optional: Refresh the page to update any related data
-                    location.reload();
-                } else {
-                    alert('Error: ' + (response.message || 'Failed to delete task'));
-                }
-            },
-            error: function(xhr, status, error) {
-                console.log(xhr.responseText);
-                alert('Error connecting to the server');
-            }
-        });
-    }
+    $('#deleteSubtaskModal').load('modal_deletesubtask.php?taskId=' + taskId, function() {
+        $('#deleteSubtaskModal').modal('show');
+    });
 }
 
 function loadSubtaskModal(taskId) {

@@ -23,16 +23,17 @@ $subtask = mysqli_fetch_assoc($result);
                 <div class="col-md-12">
                     <p>Are you sure you want to delete this subtask?</p>
                     <?php if ($subtask): ?>
-                        <p><strong>Subtask:</strong> <?php echo htmlspecialchars($subtask['subject']); ?></p>
+                        <p><strong>Subject:</strong> <?php echo htmlspecialchars($subtask['subject']); ?></p>
                     <?php endif; ?>
                 </div>
             </div>
         </div>
         <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <div id="flash-message"></div>
             <button type="button" class="btn btn-danger" onclick="deleteSubtask(<?php echo $taskId; ?>)">
-                <i class="fa fa-trash"></i> Delete
+                 Delete
             </button>
+            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
         </div>
     </div>
 </div>
@@ -43,49 +44,31 @@ function deleteSubtask(taskId) {
         url: 'delete_subtask.php',
         type: 'POST',
         data: { taskId: taskId },
+        dataType: 'json',
         success: function(response) {
             if (response.success) {
-                Swal.fire({
-                    title: 'Deleted!',
-                    text: 'Subtask has been deleted.',
-                    icon: 'success',
-                    width: '32em',
-                    customClass: {
-                        popup: 'swal-large',
-                        title: 'swal-title-large',
-                        htmlContainer: 'swal-text-large'
-                    }
-                }).then(() => {
+                // Show flash message first
+                $('#flash-message').html('<div class="alert alert-success">Subtask deleted successfully!</div>');
+                
+                // Remove the row with animation
+                $('#task-row-' + taskId).fadeOut(400, function() {
+                    $(this).remove();
+                });
+                
+                // Wait for 1.5 seconds before closing modal and reloading
+                setTimeout(function() {
+                    $('#deleteSubtaskModal').modal('hide');
                     location.reload();
-                });
+                }, 1500);
             } else {
-                Swal.fire({
-                    title: 'Error!',
-                    text: 'Error deleting subtask: ' + response.message,
-                    icon: 'error',
-                    width: '32em',
-                    customClass: {
-                        popup: 'swal-large',
-                        title: 'swal-title-large',
-                        htmlContainer: 'swal-text-large'
-                    }
-                });
+                $('#flash-message').html('<div class="alert alert-danger">' + (response.message || 'Error deleting subtask') + '</div>');
             }
-            $('#deleteSubtaskModal').modal('hide');
         },
-        error: function() {
-            Swal.fire({
-                title: 'Error!',
-                text: 'Error occurred while processing the request',
-                icon: 'error',
-                width: '32em',
-                customClass: {
-                    popup: 'swal-large',
-                    title: 'swal-title-large',
-                    htmlContainer: 'swal-text-large'
-                }
-            });
-            $('#deleteSubtaskModal').modal('hide');
+        error: function(xhr, status, error) {
+            $('#flash-message').html('<div class="alert alert-danger">An unexpected error occurred while deleting the subtask.</div>');
+            setTimeout(function() {
+                $('#deleteSubtaskModal').modal('hide');
+            }, 1500);
         }
     });
 }
