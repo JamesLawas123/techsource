@@ -207,10 +207,14 @@ while($row = mysqli_fetch_assoc($myresult)){
                                         $query66 = "SELECT id, user_firstname, user_lastname FROM sys_usertb WHERE user_statusid = '1'";
                                         $result66 = mysqli_query($conn, $query66);
                                         
-                                        // Get current assignee from the task table
+                                        // Get current assignees from the task table
                                         $query_current = "SELECT assignee FROM pm_projecttasktb WHERE id = '$id'";
                                         $result_current = mysqli_query($conn, $query_current);
-                                        $current_assignee = mysqli_fetch_assoc($result_current)['assignee'];
+                                        $row_current = mysqli_fetch_assoc($result_current);
+                                        
+                                        // Convert comma-separated assignees to array
+                                        $current_assignees = !empty($row_current['assignee']) ? 
+                                            explode(',', $row_current['assignee']) : array();
 
                                         while($row66 = mysqli_fetch_assoc($result66)) {
                                             $user_firstname = mb_convert_case($row66['user_firstname'], MB_CASE_TITLE, "UTF-8");
@@ -218,8 +222,8 @@ while($row = mysqli_fetch_assoc($myresult)){
                                             $engrid = $row66['id'];
                                             $name = $user_firstname . " " . $user_lastname;
                                             
-                                            // Check if this user is the current assignee
-                                            $isSelected = ($current_assignee == $engrid) ? true : false;
+                                            // Check if this user is in the current assignees array
+                                            $isSelected = in_array($engrid, $current_assignees) ? true : false;
                                         ?>
                                             <option value="<?php echo $engrid; ?>" <?php echo $isSelected ? 'selected' : ''; ?>>
                                                 <?php echo $name; ?>
@@ -386,32 +390,22 @@ while($row = mysqli_fetch_assoc($myresult)){
 
     // Handle form submission
     $('#submitSubtaskBtn').click(function(e) {
-        e.preventDefault(); // Prevent default form submission
+        e.preventDefault();
         
-        // Debug logging
-        console.log('Selected assignees:', $('#taskAssigneeUp2').val());
-        
-        // Create FormData object
         var formData = new FormData($('#subtaskInfo')[0]);
         
         // Handle multiple assignees properly
-        var selectedAssignees = $('#taskAssigneeUp2').val();
-        if (selectedAssignees && selectedAssignees.length > 0) {
-            // Remove any existing values
-            formData.delete('taskAssigneeUp2');
-            formData.delete('taskAssigneeUp2[]');
-            
-            // Add each selected value with the proper array syntax for PHP
-            for (var i = 0; i < selectedAssignees.length; i++) {
-                formData.append('taskAssigneeUp2[]', selectedAssignees[i]);
-            }
-        } else {
-            // Ensure we send an empty array if nothing selected
-            formData.append('taskAssigneeUp2[]', '');
-        }
+        var selectedAssignees = $('#taskAssigneeUp2').val() || [];
+        
+        // Keep the original field name taskAssigneeUp2[]
+        formData.delete('taskAssigneeUp2[]');
+        selectedAssignees.forEach(function(assignee) {
+            formData.append('taskAssigneeUp2[]', assignee);
+        });
         
         // Debug logging
-        console.log('Form data before sending:');
+        console.log('Selected assignees:', selectedAssignees);
+        console.log('Form data:');
         for (var pair of formData.entries()) {
             console.log(pair[0] + ': ' + pair[1]);
         }
@@ -424,13 +418,12 @@ while($row = mysqli_fetch_assoc($myresult)){
             processData: false,
             contentType: false,
             success: function(response) {
+                console.log('Raw response:', response); // Add this line for debugging
                 try {
-                    // Try to parse the response if it's a string
                     if (typeof response === 'string') {
                         response = JSON.parse(response);
                     }
                     
-                    console.log('Response:', response);
                     if(response.success) {
                         $('#flash5').html('<div class="alert alert-success">' + response.message + '</div>');
                         setTimeout(function() {
