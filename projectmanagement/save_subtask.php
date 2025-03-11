@@ -107,6 +107,7 @@ try {
         $response['success'] = true;
         $response['message'] = "Subtask created successfully";
         $response['last_id'] = mysqli_insert_id($conn);
+        $response['reload'] = true;  // Add this flag to indicate page should reload
     } else {
         throw new Exception("Error creating subtask: " . mysqli_error($conn));
     }

@@ -605,4 +605,124 @@ function showopenThread(id2) {
 	        });
 }
 
+$(document).ready(function() {
+    $('#subtaskInfo').bootstrapValidator({
+        message: 'This value is not valid',
+        live: 'enabled',
+        submitButtons: 'button[name="submitSubtaskBtn"]',            
+        feedbackIcons: {
+            required: 'glyphicon glyphicon-asterisk',
+            valid: 'glyphicon glyphicon-ok',
+            invalid: 'glyphicon glyphicon-remove',
+            validating: 'glyphicon glyphicon-refresh'
+        },
+        fields: {
+            taskProjectOwner: {
+                validators: {
+                    notEmpty: {
+                        message: 'The project owner is required'
+                    }                            
+                }
+            },
+            taskClassification: {
+                validators: {
+                    notEmpty: {
+                        message: 'The classification is required'
+                    }                            
+                }
+            },
+            subtaskPriority: {
+                validators: {
+                    notEmpty: {
+                        message: 'The priority level is required'
+                    }                            
+                }
+            },
+            subtaskSubject: {
+                validators: {
+                    notEmpty: {
+                        message: 'The subject is required'
+                    }                            
+                }
+            },
+            'subtaskAssignee[]': {
+                validators: {
+                    notEmpty: {
+                        message: 'At least one assignee is required'
+                    }                            
+                }
+            },
+            subtaskTargetDate: {
+                validators: {
+                    notEmpty: {
+                        message: 'Target date is required'
+                    },
+                    date: {
+                        format: 'YYYY-MM-DD',
+                        message: 'The date is not valid. Should be in YYYY-MM-DD'
+                    }
+                }
+            },
+            subtaskStartDate: {
+                validators: {
+                    notEmpty: {
+                        message: 'Start date is required'
+                    },
+                    date: {
+                        format: 'YYYY-MM-DD',
+                        message: 'The date is not valid. Should be in YYYY-MM-DD'
+                    }
+                }
+            }
+        }
+    });
+
+    // Handle form submission
+    $('#submitSubtaskBtn').click(function() {
+        $('#subtaskInfo').bootstrapValidator('validate');
+        var bootstrapValidator = $('#subtaskInfo').data('bootstrapValidator');
+        var stat1 = bootstrapValidator.isValid();
+        if(stat1=='1') {
+            // Get CKEditor content
+            var description = CKEDITOR.instances.subtaskDescription.getData();
+            
+            // Create FormData object
+            var formData = new FormData($('#subtaskInfo')[0]);
+            
+            // Remove any existing subtaskDescription and add the one from CKEditor
+            formData.delete('subtaskDescription');
+            formData.append('subtaskDescription', description);
+
+            // Ajax submission
+            $.ajax({
+                url: 'save_subtask.php',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                success: function(result) {
+                    if(result.success) {
+                        $('#flash5').html('<div class="alert alert-success">' + result.message + '</div>');
+                        setTimeout(function() {
+                            $('#modal-subtask').modal('hide');
+                            if(typeof loadTasks === 'function') {
+                                loadTasks();
+                            }
+                        }, 1500);
+                    } else {
+                        $('#flash5').html('<div class="alert alert-danger">' + (result.message || 'Unknown error occurred') + '</div>');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.log('Status:', status);
+                    console.log('Error:', error);
+                    console.log('Response:', xhr.responseText);
+                    $('#flash5').html('<div class="alert alert-danger">Error submitting form. Please check console for details.</div>');
+                }
+            });
+        }
+    });
+});
+
 
