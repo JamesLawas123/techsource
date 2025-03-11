@@ -1,95 +1,129 @@
 <?php
-require('../conn/db.php');
+require_once('../conn/db.php');
+require_once('../projectmanagement/upload_file.php');
 $conn = connectionDB();
 $moduleid=1;
 
-$nowdateunix = date("Y-m-d",time());	
+header('Content-Type: text/html; charset=utf-8');
 
-function alphanumericAndSpace( $string ) {
-   return preg_replace( "/[^,;a-zA-Z0-9 _-]|[,; ]$/s", "", $string );
+// Get and validate POST data
+$ticketUserid = isset($_POST['ticketUserid']) ? strtoupper($_POST['ticketUserid']) : '';
+$ticketProjectOwner = isset($_POST['ticketProjectOwner']) ? strtoupper($_POST['ticketProjectOwner']) : '';
+$ticketClassification = isset($_POST['ticketClassification']) ? strtoupper($_POST['ticketClassification']) : '';
+$ticketPriority = isset($_POST['ticketPriority']) ? strtoupper($_POST['ticketPriority']) : '';
+$ticketSubject = isset($_POST['ticketSubject']) ? strtoupper($_POST['ticketSubject']) : '';
+$ticketTargetDate = isset($_POST['ticketTargetDate']) ? strtoupper($_POST['ticketTargetDate']) : '';
+$description = isset($_POST['description']) ? strtoupper($_POST['description']) : '';
+
+// Validate required fields
+if (empty($ticketUserid) || empty($ticketProjectOwner) || empty($ticketSubject)) {
+    echo "<div class='alert alert-danger fade in'>";
+    echo "Please fill in all required fields!";           
+    echo "</div>";
+    exit;
 }
 
+$ticketStartDate = "1900-01-01";
+$ticketEndDate = "1900-01-01";
+$ticketIdentification = 2;
+if (empty($description)) {$description="NULL";}
 
-$ticketUserid=strtoupper($_GET['ticketUserid']);
-$ticketProjectOwner=strtoupper($_GET['ticketProjectOwner']);
-$ticketClassification=strtoupper($_GET['ticketClassification']);
-$ticketPriority=strtoupper($_GET['ticketPriority']);
-$ticketSubject=strtoupper($_GET['ticketSubject']);
-$ticketTargetDate=strtoupper($_GET['ticketTargetDate']);
-$description=strtoupper($_GET['description']);
+// Check for duplicate entries first
+$myquery = "SELECT subject FROM pm_projecttasktb WHERE subject = ? AND projectid = ? AND classificationid = ? LIMIT 1";
+$stmt = $conn->prepare($myquery);
+$stmt->bind_param("sss", $ticketSubject, $ticketProjectOwner, $ticketClassification);
+$stmt->execute();
+$result = $stmt->get_result();
+$num_rows = $result->num_rows;
+$stmt->close();
 
+if($num_rows > 0) {
+    $auditRemarks3 = "ATTEMPT TO REGISTER NEW TICKET, DUPLICATE | " . $ticketSubject;
+    $queryaud1 = "INSERT INTO `sys_audit` (module,remarks,userid) VALUES (?,?,?)";
+    $stmt = $conn->prepare($queryaud1);
+    $stmt->bind_param("sss", $moduleid, $auditRemarks3, $ticketUserid);
+    $stmt->execute();
 
-$ticketAssignee=null;
-$ticketStartDate="1900-01-01";
-$ticketEndDate="1900-01-01";
-$ticketIdentification = 2;	//task is from pm
-if (($description == '')||($description == null)){$description="NULL";}
-
-
-$myqueryxxup1 = "SELECT statusid FROM sys_projecttb WHERE id = '$ticketProjectOwner'";
-$myresultxxup1 = mysqli_query($conn, $myqueryxxup1);
-while($row66 = mysqli_fetch_assoc($myresultxxup1)){
-	$statusidnix=$row66['statusid'];
+    echo "<div class='alert alert-danger fade in'>";
+    echo "Duplicate Entry, Please check the details again.";           
+    echo "</div>";
+    exit;
 }
-	
 
-// if($statusidnix <> 6){
+// If no duplicate, proceed with insertion
+$myqueryxx = "INSERT INTO pm_projecttasktb (createdbyid,classificationid,priorityid,subject,deadline,description,projectid,istask,startdate,enddate)
+            VALUES (?,?,?,?,?,?,?,?,?,?)";
+$stmt = $conn->prepare($myqueryxx);
+$stmt->bind_param("ssssssssss", 
+    $ticketUserid,
+    $ticketClassification,
+    $ticketPriority,
+    $ticketSubject,
+    $ticketTargetDate,
+    $description,
+    $ticketProjectOwner,
+    $ticketIdentification,
+    $ticketStartDate,
+    $ticketEndDate
+);
 
-/*-------for audit trails--------*/
-$auditRemarks1 = "REGISTER NEW TICKET"." | ".$ticketSubject;
-$auditRemarks2 = "ATTEMPT TO REGISTER NEW TICKET, FAILED"." | ".$ticketSubject;
-$auditRemarks3 = "ATTEMPT TO REGISTER NEW TICKET, DUPLICATE"." | ".$ticketSubject;
+if($stmt->execute()) {
+    $taskId = $conn->insert_id;
+    
+    // Handle file uploads if present
+    if(isset($_FILES['attachFile']) && !empty($_FILES['attachFile']['name'][0])) {
+        try {
+            $uploadResult = uploadFiles($conn, $taskId, $ticketUserid, $_FILES['attachFile']);
+            if ($uploadResult['status'] === 'success') {
+                $fileMessage = " with " . count($uploadResult['files']) . " attached file(s)";
+            }
+        } catch (Exception $e) {
+            error_log("File upload failed: " . $e->getMessage());
+            $fileMessage = " (file upload failed: " . $e->getMessage() . ")";
+        }
+    }
 
-$myquery = "SELECT subject FROM pm_projecttasktb WHERE subject = '$ticketSubject' AND projectid = '$ticketProjectOwner' AND classificationid = '$ticketClassification' LIMIT 1";
-$myresult = mysqli_query($conn, $myquery);
-$num_rows = mysqli_num_rows($myresult);
+    // Update project status if needed
+    $statusQuery = "SELECT statusid FROM sys_projecttb WHERE id = ?";
+    $stmt = $conn->prepare($statusQuery);
+    $stmt->bind_param("s", $ticketProjectOwner);
+    $stmt->execute();
+    $statusResult = $stmt->get_result();
+    $statusRow = $statusResult->fetch_assoc();
+    
+    if($statusRow['statusid'] == 1 || $statusRow['statusid'] == 6) {
+        $updateQuery = "UPDATE sys_projecttb SET statusid = '3' WHERE id = ?";
+        $stmt = $conn->prepare($updateQuery);
+        $stmt->bind_param("s", $ticketProjectOwner);
+        $stmt->execute();
+    }
+    
+    // Add audit trail
+    $auditRemarks1 = "REGISTER NEW TICKET | " . $ticketSubject;
+    $queryaud1 = "INSERT INTO `sys_audit` (module,remarks,userid) VALUES (?,?,?)";
+    $stmt = $conn->prepare($queryaud1);
+    $stmt->bind_param("sss", $moduleid, $auditRemarks1, $ticketUserid);
+    $stmt->execute();
 
-	if($num_rows == 0){
-		
-		$myqueryxx = "INSERT INTO pm_projecttasktb (createdbyid,classificationid,priorityid,subject,deadline,description,projectid,istask,startdate,enddate)
-					VALUES ('$ticketUserid','$ticketClassification','$ticketPriority','$ticketSubject','$ticketTargetDate','$description','$ticketProjectOwner','$ticketIdentification','$ticketStartDate','$ticketEndDate')";
-		$myresultxx = mysqli_query($conn, $myqueryxx);
-		
-		if($myresultxx){
-			if($statusidnix == 1){
-			$myqueryxxup = "UPDATE sys_projecttb
-									SET statusid = '3'
-									WHERE id = '$ticketProjectOwner'";
-			$myresultxxup = mysqli_query($conn, $myqueryxxup);	
-			}elseif($statusidnix == 6){
-			$myqueryxxup = "UPDATE sys_projecttb
-									SET statusid = '3'
-									WHERE id = '$ticketProjectOwner'";
-			$myresultxxup = mysqli_query($conn, $myqueryxxup);	
-			}
-			
-			$queryaud1 = "INSERT INTO `sys_audit` (module,remarks,userid) VALUES ('$moduleid','$auditRemarks1','$ticketUserid')";
-			$resaud1 = mysqli_query($conn, $queryaud1);
-			echo "<div class='alert alert-info fade in'>";
-			echo "New Ticket has been saved!";   		
-			echo "</div>";
-		}else{
-			$queryaud1 = "INSERT INTO `sys_audit` (module,remarks,userid) VALUES ('$moduleid','$auditRemarks2','$ticketUserid')";
-			$resaud1 = mysqli_query($conn, $queryaud1);
-			echo "<div class='alert alert-danger fade in'>";
-			echo "Failed to save information!";   		
-			echo "</div>";
-		}
-	}else{
-		$queryaud1 = "INSERT INTO `sys_audit` (module,remarks,userid) VALUES ('$moduleid','$auditRemarks3','$ticketUserid')";
-		$resaud1 = mysqli_query($conn, $queryaud1);
-		
-		echo "<div class='alert alert-danger fade in'>";
-		echo "Duplicate Entry, Please check the details again.";   		
-		echo "</div>";
-	}
-// }else{
-	// echo "<div class='alert alert-danger fade in'>";
-	// echo "Project has been closed, to proceed adding new task for this, call your PM.";   		
-	// echo "</div>";
-// }
+    // Return success response with a flag
+    $response = array(
+        'status' => 'success',
+        'message' => "New Ticket has been saved!" . (isset($fileMessage) ? $fileMessage : ""),
+        'redirect' => 'ticket.php'
+    );
+    echo json_encode($response);
+} else {
+    $auditRemarks2 = "ATTEMPT TO REGISTER NEW TICKET, FAILED | " . $ticketSubject;
+    $queryaud1 = "INSERT INTO `sys_audit` (module,remarks,userid) VALUES (?,?,?)";
+    $stmt = $conn->prepare($queryaud1);
+    $stmt->bind_param("sss", $moduleid, $auditRemarks2, $ticketUserid);
+    $stmt->execute();
+
+    // Return error response
+    $response = array(
+        'status' => 'error',
+        'message' => "Failed to save information!"
+    );
+    echo json_encode($response);
+}
 ?>
-
-<script type="text/javascript">
-	setTimeout(function(){location.reload();}, 1000);
-</script>

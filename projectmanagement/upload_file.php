@@ -1,5 +1,5 @@
 <?php
-include('../conn/db.php');
+require_once('../conn/db.php');
 session_start();
 
 // Set header for JSON response
@@ -10,6 +10,15 @@ error_reporting(E_ALL);
 ini_set('display_errors', 0);
 
 function uploadFiles($mysqlconn, $taskId, $userId, $files) {
+    // Skip validation for included usage
+    if (!isset($files['name']) || empty($files['name'][0])) {
+        return [
+            'status' => 'success',
+            'message' => 'No files to upload',
+            'files' => []
+        ];
+    }
+
     try {
         $uploadDir = __DIR__ . '/uploadspm/';
         if (!is_dir($uploadDir)) {
@@ -74,28 +83,16 @@ function uploadFiles($mysqlconn, $taskId, $userId, $files) {
             ];
         }
 
-        if (empty($filePaths)) {
-            throw new Exception('No files were successfully uploaded');
-        }
-
-        // Store all file paths as a comma-separated string
-        $filePathString = implode(',', $filePaths);
-
-        // Insert single record with all file paths
-        $sql = "INSERT INTO pm_threadtb 
-                (taskid, createdbyid, datetimecreated, type, file_data, subject) 
-                VALUES (?, ?, NOW(), 'file', ?, ?)";
-        
-        $stmt = $mysqlconn->prepare($sql);
-        if (!$stmt) {
-            throw new Exception('Database prepare statement failed: ' . mysqli_error($mysqlconn));
-        }
-
-        $subject = isset($_POST['taskSubjectUp2']) ? $_POST['taskSubjectUp2'] : '';
-        $stmt->bind_param("iiss", $taskId, $userId, $filePathString, $subject);
-
-        if (!$stmt->execute()) {
-            throw new Exception('Database execution failed: ' . $stmt->error);
+        if (!empty($filePaths)) {
+            $filePathString = implode(',', $filePaths);
+            
+            $sql = "INSERT INTO pm_threadtb 
+                    (taskid, createdbyid, datetimecreated, type, file_data) 
+                    VALUES (?, ?, NOW(), 'file', ?)";
+            
+            $stmt = $mysqlconn->prepare($sql);
+            $stmt->bind_param("iis", $taskId, $userId, $filePathString);
+            $stmt->execute();
         }
 
         return [
@@ -105,52 +102,31 @@ function uploadFiles($mysqlconn, $taskId, $userId, $files) {
         ];
 
     } catch (Exception $e) {
-        // Clean up any uploaded files if an error occurs
-        if (!empty($uploadedFiles)) {
-            foreach ($uploadedFiles as $file) {
-                $fullPath = __DIR__ . '/' . $file['path'];
-                if (file_exists($fullPath)) {
-                    unlink($fullPath);
-                }
-            }
-        }
-        throw $e;
+        error_log("File upload error: " . $e->getMessage());
+        return [
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'files' => []
+        ];
     }
 }
 
-try {
-    // Validate request method
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        throw new Exception('Invalid request method');
+// Only process direct API calls
+if ($_SERVER['SCRIPT_NAME'] === __FILE__) {
+    header('Content-Type: application/json');
+    try {
+        if (!isset($_POST['taskId']) || !isset($_POST['userId'])) {
+            throw new Exception('Missing required parameters');
+        }
+
+        $result = uploadFiles($conn, $_POST['taskId'], $_POST['userId'], $_FILES['attachFile']);
+        echo json_encode($result);
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
     }
-
-    // Validate file upload
-    if (!isset($_FILES['attachFile']) || empty($_FILES['attachFile']['name'][0])) {
-        throw new Exception('No files uploaded');
-    }
-
-    // Validate file count
-    if (count($_FILES['attachFile']['name']) > 10) {
-        throw new Exception('Maximum 10 files can be uploaded at once');
-    }
-
-    // Validate required parameters
-    $taskId = isset($_POST['taskId']) ? intval($_POST['taskId']) : 0;
-    $userId = isset($_SESSION['userid']) ? $_SESSION['userid'] : 0;
-
-    if (!$taskId || !$userId) {
-        throw new Exception('Missing required parameters');
-    }
-
-    // Process file uploads
-    $result = uploadFiles($mysqlconn, $taskId, $userId, $_FILES['attachFile']);
-    echo json_encode($result);
-
-} catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode([
-        'status' => 'error',
-        'message' => $e->getMessage()
-    ]);
 }
 ?>
