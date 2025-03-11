@@ -201,46 +201,25 @@ while($row = mysqli_fetch_assoc($myresult)){
                         <div class="col-lg-6">
                             <div class="form-group">
                                 <label class="block clearfix">Assignee
-                                    <select multiple name="taskAssigneeUp2" id="taskAssigneeUp2" class="chosen-select form-control" data-placeholder="Select Assignee(s)">
+                                    <select multiple name="taskAssigneeUp2[]" id="taskAssigneeUp2" class="chosen-select form-control" data-placeholder="Select Assignee(s)">
                                         <?php 
+                                        // Get all active users
                                         $query66 = "SELECT id, user_firstname, user_lastname FROM sys_usertb WHERE user_statusid = '1'";
                                         $result66 = mysqli_query($conn, $query66);
+                                        
+                                        // Get current assignee from the task table
+                                        $query_current = "SELECT assignee FROM pm_projecttasktb WHERE id = '$id'";
+                                        $result_current = mysqli_query($conn, $query_current);
+                                        $current_assignee = mysqli_fetch_assoc($result_current)['assignee'];
+
                                         while($row66 = mysqli_fetch_assoc($result66)) {
                                             $user_firstname = mb_convert_case($row66['user_firstname'], MB_CASE_TITLE, "UTF-8");
                                             $user_lastname = mb_convert_case($row66['user_lastname'], MB_CASE_TITLE, "UTF-8");
                                             $engrid = $row66['id'];
+                                            $name = $user_firstname . " " . $user_lastname;
                                             
-                                            // Fetch assignee from pm_projecttasktb
-                                            $query_assignee = "SELECT assignee FROM pm_projecttasktb WHERE id = '$id'";
-                                            $result_assignee = mysqli_query($conn, $query_assignee);
-                                            $row_assignee = mysqli_fetch_assoc($result_assignee);
-                                            $assignee_id = $row_assignee['assignee'];
-                                            
-                                            // Fetch user details from sys_usertb
-                                            if (!empty($assignee_id)) {
-                                                $query_user = "SELECT user_firstname, user_lastname FROM sys_usertb WHERE id = '$assignee_id'";
-                                                $result_user = mysqli_query($conn, $query_user);
-                                                $row_user = mysqli_fetch_assoc($result_user);
-                                                if ($row_user) {
-                                                    $name = mb_convert_case($row_user['user_firstname'], MB_CASE_TITLE, "UTF-8") . " " . 
-                                                           mb_convert_case($row_user['user_lastname'], MB_CASE_TITLE, "UTF-8");
-                                                } else {
-                                                    $name = $user_firstname . " " . $user_lastname;
-                                                }
-                                            } else {
-                                                $name = $user_firstname . " " . $user_lastname;
-                                            }
-                                            
-                                            // Check if this user is assigned to the task
-                                            $query66x = "SELECT assigneeid FROM pm_taskassigneetb WHERE taskid = '$id'";
-                                            $result66x = mysqli_query($conn, $query66x);
-                                            $isSelected = false;
-                                            while($row66x = mysqli_fetch_assoc($result66x)) {
-                                                if ($row66x['assigneeid'] == $engrid) {
-                                                    $isSelected = true;
-                                                    break;
-                                                }
-                                            }
+                                            // Check if this user is the current assignee
+                                            $isSelected = ($current_assignee == $engrid) ? true : false;
                                         ?>
                                             <option value="<?php echo $engrid; ?>" <?php echo $isSelected ? 'selected' : ''; ?>>
                                                 <?php echo $name; ?>
