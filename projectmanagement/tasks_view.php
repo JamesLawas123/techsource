@@ -29,6 +29,14 @@ $myquery = "SELECT DISTINCT pm_projecttasktb.id,pm_projecttasktb.subject,pm_proj
             ORDER BY pm_projecttasktb.datetimecreated ASC";
 ?>
 
+<!-- Replace your current DataTables CSS/JS with these lines -->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap4.min.css">
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap4.min.css">
+<script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap4.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap4.min.js"></script>
+
 <!-- Simple table with vertical scroll -->
 <div>
     <?php
@@ -155,9 +163,111 @@ $myquery = "SELECT DISTINCT pm_projecttasktb.id,pm_projecttasktb.subject,pm_proj
 </div>
 
 <script>
-$(document).ready(function() {
-   
-});
+(function() {
+    function initDataTable() {
+        if (typeof $.fn.DataTable !== 'undefined') {
+            // DataTables is available - initialize immediately with animation disabled
+            try {
+                var table = $('#subtasksTable').DataTable({
+                    responsive: true,
+                    paging: true,
+                    searching: true,
+                    ordering: true,
+                    info: true,
+                    lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                    language: {
+                        emptyTable: "No subtasks available"
+                    },
+                    // Disable animation
+                    deferRender: false,
+                    processing: false,
+                    // Performance optimizations
+                    autoWidth: false,
+                    stateSave: false,
+                    columnDefs: [
+                        { width: "3%", targets: 0 },
+                        { width: "8%", targets: [1, 2, 3, 7] },
+                        { width: "25%", targets: 4 },
+                        { width: "15%", targets: [5, 6] },
+                        { width: "5%", targets: 8, orderable: false, searchable: false }
+                    ],
+                    // Fix for preserving row classes
+                    rowCallback: function(row, data, index) {
+                        var rowId = data[0]; // Assuming first column has the ID or counter
+                        // Try to find original class
+                        $('tr[id^="task-row-"]').each(function() {
+                            var $this = $(this);
+                            if ($this.find('td:first').text() == rowId) {
+                                $(row).addClass($this.attr('class'));
+                            }
+                        });
+                    },
+                    // Fix for button display in responsive mode
+                    drawCallback: function() {
+                        $('.btn-group').css('display', 'flex').css('gap', '4px');
+                    }
+                });
+                
+                // Apply any needed style overrides immediately
+                $('#subtasksTable_wrapper').css('opacity', 1);
+                console.log("DataTables initialized successfully with Bootstrap styling");
+            } catch (e) {
+                console.error("Error initializing DataTables:", e);
+            }
+        } else {
+            console.log("DataTables library not available");
+            
+            // Load only the essential files to minimize delay
+            var script = document.createElement('script');
+            script.src = 'https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js';
+            script.onload = function() {
+                // Once basic DataTables is loaded, initialize without waiting for other files
+                if (typeof $.fn.DataTable !== 'undefined') {
+                    $('#subtasksTable').DataTable({
+                        // Basic options only for faster initialization
+                        responsive: false, // Disable responsive initially for speed
+                        deferRender: false,
+                        processing: false,
+                        autoWidth: false,
+                        paging: true,
+                        ordering: true,
+                        info: true
+                    });
+                    
+                    // Load the rest of the files for enhanced styling later
+                    [
+                        'https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap4.min.js',
+                        'https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js',
+                        'https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap4.min.js'
+                    ].forEach(function(src) {
+                        var script = document.createElement('script');
+                        script.src = src;
+                        document.head.appendChild(script);
+                    });
+                    
+                    console.log("DataTables initialized with basic options");
+                }
+            };
+            document.head.appendChild(script);
+            
+            // Add just the basic CSS first
+            var link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.type = 'text/css';
+            link.href = 'https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap4.min.css';
+            document.head.appendChild(link);
+        }
+    }
+    
+    // Remove the setTimeout to eliminate the artificial delay
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        // Execute immediately
+        initDataTable();
+    } else {
+        // Execute as soon as DOM is ready
+        document.addEventListener('DOMContentLoaded', initDataTable);
+    }
+})();
 
 function deleteTask(taskId) {
     $('#deleteSubtaskModal').load('modal_deletesubtask.php?taskId=' + taskId, function() {
@@ -171,3 +281,21 @@ function loadSubtaskModal(taskId) {
     });
 }
 </script>
+
+<!-- Add this CSS to remove animation delays -->
+<style>
+/* Override DataTables animations that cause delay */
+.dataTable {
+    transition: none !important;
+    animation: none !important;
+}
+.dataTables_wrapper .row {
+    transition: none !important;
+    animation: none !important;
+}
+/* Make DataTables controls appear immediately */
+.dataTables_length, .dataTables_filter, .dataTables_info, .dataTables_paginate {
+    opacity: 1 !important;
+    transition: none !important;
+}
+</style>
