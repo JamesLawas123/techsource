@@ -166,7 +166,6 @@ $myquery = "SELECT DISTINCT pm_projecttasktb.id,pm_projecttasktb.subject,pm_proj
 (function() {
     function initDataTable() {
         if (typeof $.fn.DataTable !== 'undefined') {
-            // DataTables is available - initialize immediately with animation disabled
             try {
                 var table = $('#subtasksTable').DataTable({
                     responsive: true,
@@ -178,10 +177,8 @@ $myquery = "SELECT DISTINCT pm_projecttasktb.id,pm_projecttasktb.subject,pm_proj
                     language: {
                         emptyTable: "No subtasks available"
                     },
-                    // Disable animation
                     deferRender: false,
                     processing: false,
-                    // Performance optimizations
                     autoWidth: false,
                     stateSave: false,
                     columnDefs: [
@@ -191,10 +188,8 @@ $myquery = "SELECT DISTINCT pm_projecttasktb.id,pm_projecttasktb.subject,pm_proj
                         { width: "15%", targets: [5, 6] },
                         { width: "5%", targets: 8, orderable: false, searchable: false }
                     ],
-                    // Fix for preserving row classes
                     rowCallback: function(row, data, index) {
-                        var rowId = data[0]; // Assuming first column has the ID or counter
-                        // Try to find original class
+                        var rowId = data[0];
                         $('tr[id^="task-row-"]').each(function() {
                             var $this = $(this);
                             if ($this.find('td:first').text() == rowId) {
@@ -202,30 +197,22 @@ $myquery = "SELECT DISTINCT pm_projecttasktb.id,pm_projecttasktb.subject,pm_proj
                             }
                         });
                     },
-                    // Fix for button display in responsive mode
                     drawCallback: function() {
                         $('.btn-group').css('display', 'flex').css('gap', '4px');
                     }
                 });
                 
-                // Apply any needed style overrides immediately
                 $('#subtasksTable_wrapper').css('opacity', 1);
-                console.log("DataTables initialized successfully with Bootstrap styling");
             } catch (e) {
-                console.error("Error initializing DataTables:", e);
+                // Silently handle any errors
             }
         } else {
-            console.log("DataTables library not available");
-            
-            // Load only the essential files to minimize delay
             var script = document.createElement('script');
             script.src = 'https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js';
             script.onload = function() {
-                // Once basic DataTables is loaded, initialize without waiting for other files
                 if (typeof $.fn.DataTable !== 'undefined') {
                     $('#subtasksTable').DataTable({
-                        // Basic options only for faster initialization
-                        responsive: false, // Disable responsive initially for speed
+                        responsive: false,
                         deferRender: false,
                         processing: false,
                         autoWidth: false,
@@ -234,7 +221,6 @@ $myquery = "SELECT DISTINCT pm_projecttasktb.id,pm_projecttasktb.subject,pm_proj
                         info: true
                     });
                     
-                    // Load the rest of the files for enhanced styling later
                     [
                         'https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap4.min.js',
                         'https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js',
@@ -244,18 +230,9 @@ $myquery = "SELECT DISTINCT pm_projecttasktb.id,pm_projecttasktb.subject,pm_proj
                         script.src = src;
                         document.head.appendChild(script);
                     });
-                    
-                    console.log("DataTables initialized with basic options");
                 }
             };
             document.head.appendChild(script);
-            
-            // Add just the basic CSS first
-            var link = document.createElement('link');
-            link.rel = 'stylesheet';
-            link.type = 'text/css';
-            link.href = 'https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap4.min.css';
-            document.head.appendChild(link);
         }
     }
     
