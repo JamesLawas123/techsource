@@ -20,6 +20,10 @@ $userClient=strtoupper($_GET['userClient']);
 $userPassword = '1234';
 $userStatusid = '1';
 if (($userClient == '')||($userClient == null)){$userClient=0;}
+
+// Hash the default password for secure storage
+$hashedPassword = password_hash($userPassword, PASSWORD_DEFAULT);
+
 /*-------for audit trails--------*/
 $auditRemarks1 = "REGISTER NEW USER"." | ".$userName;
 $auditRemarks2 = "ATTEMPT TO REGISTER NEW USER, FAILED"." | ".$userName;
@@ -33,7 +37,7 @@ if($num_rows == 0){
 	$mysqlins = "INSERT INTO `sys_usertb` (user_firstname,user_lastname,username,password,
 											 user_statusid,user_levelid,user_groupid,
 											 createdbyid,companyid,emailadd)
-								   VALUES ('$userFirstName','$userLastName','$userName','$userPassword',
+								   VALUES ('$userFirstName','$userLastName','$userName','$hashedPassword',
 											'$userStatusid','$userLevel','$userGroup',
 											'$userUserid','$userClient','$userEmail')";
 	$myresultins = mysqli_query($conn, $mysqlins);

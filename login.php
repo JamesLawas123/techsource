@@ -12,49 +12,6 @@
 		<link rel="stylesheet" href="assets/css/fonts.googleapis.com.css" />
 		<link rel="stylesheet" href="assets/css/ace.min.css" />
 		<link rel="stylesheet" href="assets/css/ace-rtl.min.css" />
-
-		<style>
-			body.login-layout {
-				background-image: url('assets/images/icecream.jpg');
-				background-size: 100% 100%;
-				background-position: center;
-				background-repeat: no-repeat;
-				background-attachment: fixed;
-				min-height: 100vh;
-				display: flex;
-				align-items: center;
-			}
-
-			.main-container {
-				width: 100%;
-			}
-
-			.login-container {
-				background: rgba(255, 255, 255, 0.4);
-				border-radius: 10px;
-				padding: 20px;
-				box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-				margin: 0 auto;
-				position: relative;
-				top: 0;
-				transform: translateY(0);
-			}
-
-			.panel {
-				background: transparent;
-			}
-
-			.panel-default {
-				border: none;
-				box-shadow: none;
-			}
-
-			.panel-heading {
-				background: rgba(255, 255, 255, 0.8) !important;
-				border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-			}
-		</style>
-
 	<script type="text/javascript">
 			function getXMLHTTP() { //fuction to return the xml http object
 			var xmlhttp=false;	
@@ -105,6 +62,7 @@
 								
 									//alert('Access Denied.');								
 									ele.style.display = "block";
+									ele.innerHTML = data[2];
 									clearfields(); 
 									$('#box').shake();
 									
@@ -113,6 +71,7 @@
 								{
 									//alert('Access Denied. No Record found.');
 									ele.style.display = "block";
+									ele.innerHTML = data[2];
 									clearfields(); 
 									$('#box').shake();
 								}
