@@ -172,10 +172,13 @@ $conn = connectionDB();
     </div>
 </div>
 
-<script src="../assets/customjs/projectmanagement.js"></script>
+
 <script src="../assets/customjs/jquery.tagsinput.js"></script>
 <script src="../assets/js/jquery-ui.custom.min.js"></script>
 <script src="../assets/js/chosen.jquery.min.js"></script>
+<script src="../assets/js/jquery.min.js"></script>
+<script src="../assets/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/js/responsive.bootstrap4.min.js"></script>
 
 <script type="text/javascript">
     CKEDITOR.replace('subtaskDescription');
