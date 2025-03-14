@@ -62,7 +62,6 @@
 								
 									//alert('Access Denied.');								
 									ele.style.display = "block";
-									ele.innerHTML = data[2];
 									clearfields(); 
 									$('#box').shake();
 									
@@ -71,7 +70,6 @@
 								{
 									//alert('Access Denied. No Record found.');
 									ele.style.display = "block";
-									ele.innerHTML = data[2];
 									clearfields(); 
 									$('#box').shake();
 								}

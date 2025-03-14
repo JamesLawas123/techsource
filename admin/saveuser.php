@@ -18,12 +18,15 @@ $userLevel=strtoupper($_GET['userLevel']);
 $userGroup=strtoupper($_GET['userGroup']);
 $userClient=strtoupper($_GET['userClient']);
 $userPassword = '1234';
-$userStatusid = '1';
-if (($userClient == '')||($userClient == null)){$userClient=0;}
-
-// Hash the default password for secure storage
 $hashedPassword = password_hash($userPassword, PASSWORD_DEFAULT);
 
+
+if (strlen($hashedPassword) < 60) {
+    die("Error: Password hash is incomplete");
+}
+
+$userStatusid = '1';
+if (($userClient == '')||($userClient == null)){$userClient=0;}
 /*-------for audit trails--------*/
 $auditRemarks1 = "REGISTER NEW USER"." | ".$userName;
 $auditRemarks2 = "ATTEMPT TO REGISTER NEW USER, FAILED"." | ".$userName;
