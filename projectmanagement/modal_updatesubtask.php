@@ -310,7 +310,7 @@ while($row = mysqli_fetch_assoc($myresult)){
     </div>
 </div>
 
-<script src="../assets/customjs/projectmanagement.js"></script>
+
 <script src="../assets/customjs/jquery.tagsinput.js"></script>
 <script src="../assets/js/jquery-ui.custom.min.js"></script>
 <script src="../assets/js/chosen.jquery.min.js"></script>

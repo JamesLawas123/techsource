@@ -18,6 +18,13 @@ $userLevel=strtoupper($_GET['userLevel']);
 $userGroup=strtoupper($_GET['userGroup']);
 $userClient=strtoupper($_GET['userClient']);
 $userPassword = '1234';
+$hashedPassword = password_hash($userPassword, PASSWORD_DEFAULT);
+
+
+if (strlen($hashedPassword) < 60) {
+    die("Error: Password hash is incomplete");
+}
+
 $userStatusid = '1';
 if (($userClient == '')||($userClient == null)){$userClient=0;}
 /*-------for audit trails--------*/
@@ -33,7 +40,7 @@ if($num_rows == 0){
 	$mysqlins = "INSERT INTO `sys_usertb` (user_firstname,user_lastname,username,password,
 											 user_statusid,user_levelid,user_groupid,
 											 createdbyid,companyid,emailadd)
-								   VALUES ('$userFirstName','$userLastName','$userName','$userPassword',
+								   VALUES ('$userFirstName','$userLastName','$userName','$hashedPassword',
 											'$userStatusid','$userLevel','$userGroup',
 											'$userUserid','$userClient','$userEmail')";
 	$myresultins = mysqli_query($conn, $mysqlins);
