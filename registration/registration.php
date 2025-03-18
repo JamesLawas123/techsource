@@ -5,7 +5,7 @@ include "blocks/header.php";
 $moduleid=1;
 include('proxy.php');
 
-		$rest="";	
+$rest="";	
 		if($mycompanyid!='0')
 		 {
 			if($rest==""){$rest.="AND sys_projecttb.clientid = '$mycompanyid'";}
@@ -14,6 +14,14 @@ include('proxy.php');
 		}
 		else{
 			$rest.="";
+		}
+
+		$rest2="";	
+
+		if($userlevelid == 1){
+			$rest2.="";
+		}else{
+			$rest2.=" AND pm_projecttasktb.createdbyid = '$userid'";
 		}
 
 ?>
@@ -101,7 +109,7 @@ include('proxy.php');
 															LEFT JOIN sys_taskstatustb ON sys_taskstatustb.id=pm_projecttasktb.statusid
 															LEFT JOIN sys_priorityleveltb ON sys_priorityleveltb.id=pm_projecttasktb.priorityid
 															LEFT JOIN sys_projecttb ON sys_projecttb.id=pm_projecttasktb.projectid
-															WHERE pm_projecttasktb.istask = '2' $rest AND pm_projecttasktb.statusid IN ('1')
+															WHERE pm_projecttasktb.istask = '2' $rest AND pm_projecttasktb.statusid IN ('1') $rest2
 															ORDER BY pm_projecttasktb.datetimecreated ASC";
 												$myresult = mysqli_query($conn, $myquery);
 												while($row = mysqli_fetch_assoc($myresult)){
