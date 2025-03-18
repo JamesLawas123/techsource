@@ -240,16 +240,6 @@ while($row = mysqli_fetch_assoc($myresult)){
 							
 							<div class="col-lg-6">
 								<div class="form-group">
-									<label class="block clearfix">Description
-										<textarea id="descriptionupdate2" name="descriptionupdate2" rows="5" cols="80">
-										<?php echo $myTaskDescription;?>
-										</textarea>
-									</label>
-								</div>	
-							</div>
-							
-							<div class="col-lg-6">
-								<div class="form-group">
 									<label class="block clearfix">Task Status
 										<span class="block input-icon input-icon-left">
 											<select class="form-control" id="taskStatus2" name="taskStatus2">
@@ -270,7 +260,36 @@ while($row = mysqli_fetch_assoc($myresult)){
 											</select>
 										</span>
 									</label>
-								</div>	
+								</div>
+
+								<div class="form-group">
+									<label class="block clearfix">Description
+										<textarea id="descriptionupdate2" name="descriptionupdate2" rows="5" cols="80">
+										<?php echo $myTaskDescription;?>
+										</textarea>
+									</label>
+								</div>
+							</div>
+							
+							<div class="col-lg-6">
+								<div class="form-group">
+									<label class="block clearfix">Attach File
+										<span class="block input-icon input-icon-left">
+											<div class="input-group">
+												<input type="file" class="form-control" id="attachFile" name="attachFile[]" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt">
+												<span class="input-group-btn">
+													<button type="button" class="btn btn-sm btn-primary" id="uploadBtn" name="uploadBtn">
+														<span class="bigger-110">Upload</span>
+														<i class="ace-icon fa fa-arrow-up icon-on-right"></i>
+													</button>
+												</span>
+											</div>
+											<div id="fileNameDisplay" style="margin-top: 5px; font-size: 12px; color: #666;">
+												No files selected
+											</div>
+										</span>
+									</label>
+								</div>
 
 								<div class="form-group">
 									<label class="block clearfix">Uploaded Files
@@ -308,30 +327,6 @@ while($row = mysqli_fetch_assoc($myresult)){
 										</span>
 									</label>
 								</div>
-
-								<div class="form-group">
-									<label class="block clearfix">Attach File
-										<span class="block input-icon input-icon-left">
-											<div class="input-group">
-												<input type="file" class="form-control" id="attachFile" name="attachFile[]" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt">
-												<span class="input-group-btn">
-													<button type="button" class="btn btn-sm btn-primary" id="uploadBtn" name="uploadBtn">
-														<span class="bigger-110">Upload</span>
-														<i class="ace-icon fa fa-arrow-up icon-on-right"></i>
-													</button>
-												</span>
-											</div>
-											<div id="fileNameDisplay" style="margin-top: 5px; font-size: 12px; color: #666;">
-												No files selected
-											</div>
-										</span>
-									</label>
-								</div>		
-
-								
-
-							
-
 							</div>
 							<div class="col-lg-6">
 								<a class="width-55 pull-right btn btn-sm btn-danger" href="threadPage.php?taskId=<?php echo $taskId; ?>" id="openThread">

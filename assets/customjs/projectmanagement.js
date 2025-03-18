@@ -84,7 +84,7 @@ $(document).ready(function() {
                     }                            
                 }
             },
-			taskAssignee: {
+			'taskAssignee[]': {
                 validators: {
                     notEmpty: {
                         message: 'Person assigned is required'
@@ -129,62 +129,102 @@ $(document).ready(function() {
 	.on('success.field.bv', function(e, data) {
          console.log(data.field, data.element, '-->success');
     });
-	$('#submitTasktBtn').click(function() {
+	$('#submitTasktBtn').click(function(e) {
+		// Prevent multiple clicks
+		var $btn = $(this);
+		if ($btn.prop('disabled')) {
+			return;
+		}
+		
 		$('#taskInfo').bootstrapValidator('validate');
 		var bootstrapValidator = $('#taskInfo').data('bootstrapValidator');
-		var stat1 = bootstrapValidator.isValid();
-		if(stat1=='1')
-		{
-			var taskProjectOwner = $("#taskProjectOwner").val();	
-			var taskUserid = $("#taskUserid").val();	
-			var taskClassification = $("#taskClassification").val();	
-			var taskPriority = $("#taskPriority").val();	
-			var taskSubject = encodeURIComponent($("#taskSubject").val());	
-			// var taskAssignee = $("#taskAssignee").chosen().val()
-			var taskAssignee2 = $("#taskAssignee2").val();	
-			var taskTargetDate = $("#taskTargetDate").val();	
-			var taskStartDate = $("#taskStartDate").val();	
-			var taskEndDate = $("#taskEndDate").val();		
-			var description= CKEDITOR.instances.description.getData();
-			var description = encodeURIComponent(description);	
-			
-			var dataString = 'taskUserid='+ taskUserid
-							+'&taskProjectOwner='+ taskProjectOwner
-							+'&taskClassification='+ taskClassification
-							+'&taskPriority='+ taskPriority
-							+'&taskSubject='+ taskSubject
-							+'&taskAssignee2='+ taskAssignee2
-							+'&taskTargetDate='+ taskTargetDate
-							+'&taskStartDate='+ taskStartDate
-							+'&taskEndDate='+ taskEndDate
-							+'&description='+ description;
-			
 		
+		if (bootstrapValidator.isValid()) {
+			// Disable the button immediately
+			$btn.prop('disabled', true);
+			
+			// Create FormData object
+			var formData = new FormData($('#taskInfo')[0]);
+			
+			// Add the CKEDITOR content
+			formData.append('description', CKEDITOR.instances.description.getData());
+			
+			// Add other form fields
+			formData.append('taskProjectOwner', $("#taskProjectOwner").val());
+			formData.append('taskUserid', $("#taskUserid").val());
+			formData.append('taskClassification', $("#taskClassification").val());
+			formData.append('taskPriority', $("#taskPriority").val());
+			formData.append('taskSubject', $("#taskSubject").val());
+			formData.append('taskAssignee2', $("#taskAssignee2").val());
+			formData.append('taskTargetDate', $("#taskTargetDate").val());
+			formData.append('taskStartDate', $("#taskStartDate").val());
+			formData.append('taskEndDate', $("#taskEndDate").val());
+
 			$.ajax({
-				type: "GET",
+				type: "POST",
 				url: "saveTask.php",
-				data: dataString,
-				cache: false,									
-						beforeSend: function(html) 
-							{			   
-								$("#flash5").show();
-								$("#flash5").html('<img src="ajax-loader.gif" align="absmiddle">&nbsp;Saving...Please Wait.');				
-							},															
-						success: function(html)
-						    {
-								$("#insert_search5").show();
-								$('#insert_search5').empty();
-								$("#insert_search5").append(html);
-								$("#flash5").hide();																		   
-						   },
-						error: function(html)
-						    {
-								$("#insert_search5").show();
-								$('#insert_search5').empty();
-								$("#insert_search5").append(html);
-								$("#flash5").hide();													   												   		
-						   }											   
+				data: formData,
+				processData: false,
+				contentType: false,
+				cache: false,
+				dataType: 'html',
+				beforeSend: function() {
+					$("#flash5").show().html('<img src="ajax-loader.gif" align="absmiddle">&nbsp;Saving...Please Wait.');
+				},
+				success: function(response) {
+					$("#flash5").hide();
+					
+					// First try to parse as JSON
+					try {
+						const result = JSON.parse(response);
+						if (result.success) {
+							handleSuccessfulSave();
+						} else {
+							$("#insert_search5").show().html(result.message);
+							$btn.prop('disabled', false);
+						}
+					} catch (e) {
+						// If not JSON, handle as HTML response
+						if (response.includes('Task Saved Successfully')) {
+							handleSuccessfulSave();
+						} else {
+							$("#insert_search5").show().html(response);
+							$btn.prop('disabled', false);
+						}
+					}
+				},
+				error: function(xhr, status, error) {
+					// Check if the response contains success message despite being treated as an error
+					if (xhr.responseText && xhr.responseText.includes('Task Saved Successfully')) {
+						$("#insert_search5").show().html(xhr.responseText);
+						handleSuccessfulSave();
+					} else {
+						console.error('Ajax error:', error);
+						$("#flash5").html('<div class="alert alert-danger">Error saving task. Please try again.</div>');
+						$btn.prop('disabled', false);
+					}
+				}
 			});
+		}
+
+		function handleSuccessfulSave() {
+			// Show success message
+			$("#flash5").html('<div class="alert alert-success">' +
+				'<i class="fa fa-check-circle"></i> ' +
+				'Task saved successfully!' +
+			'</div>').show();
+			
+			// Clear any existing messages in insert_search5
+			$("#insert_search5").empty();
+			
+			// Disable form inputs
+			$('#taskInfo :input').prop('disabled', true);
+			$('#taskInfo').off();
+			
+			// Close modal after delay
+			setTimeout(function() {
+				$('.modal').modal('hide');
+			}, 1500);
 		}
 	});	
 });

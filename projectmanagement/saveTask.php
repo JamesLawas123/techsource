@@ -1,5 +1,6 @@
 <?php
 require('../conn/db.php');
+require_once('../projectmanagement/upload_file.php');
 $conn = connectionDB();
 $moduleid=4;
 
@@ -9,16 +10,31 @@ function alphanumericAndSpace( $string ) {
    return preg_replace( "/[^,;a-zA-Z0-9 _-]|[,; ]$/s", "", $string );
 }
 
-$taskUserid=strtoupper($_GET['taskUserid']);
-$taskClassification=strtoupper($_GET['taskClassification']);
-$taskPriority=strtoupper($_GET['taskPriority']);
-$taskSubject=urldecode($_GET['taskSubject']);
-$taskAssignee=strtoupper($_GET['taskAssignee2']);
-$taskTargetDate=strtoupper($_GET['taskTargetDate']);
-$taskStartDate=strtoupper($_GET['taskStartDate']);
-$taskEndDate=strtoupper($_GET['taskEndDate']);
-$description=urldecode($_GET['description']);
-$taskProjectOwner=strtoupper($_GET['taskProjectOwner']);
+// Debug incoming data
+error_log("POST Data: " . print_r($_POST, true));
+error_log("GET Data: " . print_r($_GET, true));
+
+// Update how we get the data - check both POST and GET
+$taskUserid = isset($_POST['taskUserid']) ? strtoupper($_POST['taskUserid']) : (isset($_GET['taskUserid']) ? strtoupper($_GET['taskUserid']) : '');
+$taskClassification = isset($_POST['taskClassification']) ? strtoupper($_POST['taskClassification']) : (isset($_GET['taskClassification']) ? strtoupper($_GET['taskClassification']) : '');
+$taskPriority = isset($_POST['taskPriority']) ? strtoupper($_POST['taskPriority']) : (isset($_GET['taskPriority']) ? strtoupper($_GET['taskPriority']) : '');
+$taskSubject = isset($_POST['taskSubject']) ? urldecode($_POST['taskSubject']) : (isset($_GET['taskSubject']) ? urldecode($_GET['taskSubject']) : '');
+$taskAssignee = isset($_POST['taskAssignee2']) ? strtoupper($_POST['taskAssignee2']) : (isset($_GET['taskAssignee2']) ? strtoupper($_GET['taskAssignee2']) : '');
+$taskTargetDate = isset($_POST['taskTargetDate']) ? strtoupper($_POST['taskTargetDate']) : (isset($_GET['taskTargetDate']) ? strtoupper($_GET['taskTargetDate']) : '');
+$taskStartDate = isset($_POST['taskStartDate']) ? strtoupper($_POST['taskStartDate']) : (isset($_GET['taskStartDate']) ? strtoupper($_GET['taskStartDate']) : '');
+$taskEndDate = isset($_POST['taskEndDate']) ? strtoupper($_POST['taskEndDate']) : (isset($_GET['taskEndDate']) ? strtoupper($_GET['taskEndDate']) : '');
+$description = isset($_POST['description']) ? urldecode($_POST['description']) : (isset($_GET['description']) ? urldecode($_GET['description']) : '');
+$taskProjectOwner = isset($_POST['taskProjectOwner']) ? strtoupper($_POST['taskProjectOwner']) : (isset($_GET['taskProjectOwner']) ? strtoupper($_GET['taskProjectOwner']) : '');
+
+// Debug the processed values
+echo "<div style='display:none;'>";
+echo "Debug Values:<br>";
+echo "UserID: " . $taskUserid . "<br>";
+echo "Classification: " . $taskClassification . "<br>";
+echo "Subject: " . $taskSubject . "<br>";
+echo "Project: " . $taskProjectOwner . "<br>";
+echo "</div>";
+
 $taskIdentification = 1;	//task is from pm
 if (($description == '')||($description == null)){$description="NULL";}
 
@@ -59,6 +75,19 @@ $num_rows = mysqli_num_rows($myresult);
 		}
 		
 		if($myresultxx){
+			// Handle file uploads if present
+			$fileMessage = "";
+			if(isset($_FILES['attachFile']) && !empty($_FILES['attachFile']['name'][0])) {
+				try {
+					$uploadResult = uploadFiles($conn, $lastid, $taskUserid, $_FILES['attachFile']);
+					if ($uploadResult['status'] === 'success') {
+						$fileMessage = " with " . count($uploadResult['files']) . " attached file(s)";
+					}
+				} catch (Exception $e) {
+					error_log("File upload failed: " . $e->getMessage());
+					$fileMessage = " (file upload failed: " . $e->getMessage() . ")";
+				}
+			}
 			
 			if($statusidnix == 1){
 			$myqueryxxup = "UPDATE sys_projecttb
@@ -71,24 +100,93 @@ $num_rows = mysqli_num_rows($myresult);
 			// $sql2=mysqli_query($conn,"CALL insertAudit('$moduleid','$auditRemarks1','$taskUserid')");
 			$queryaud1 = "INSERT INTO `sys_audit` (module,remarks,userid) VALUES ('$moduleid','$auditRemarks1','$taskUserid')";
 			$resaud1 = mysqli_query($conn, $queryaud1);
-			echo "<div class='alert alert-info fade in'>";
-			echo "New Client has been saved!";   		
+			echo "<div id='successMessage' style='text-align: center; padding: 20px; background-color: #4CAF50; color: white; margin: 20px;'>";
+			echo "<h3>Task Saved Successfully!" . $fileMessage . "</h3>";
+			echo "<p>Redirecting to task list...</p>";
 			echo "</div>";
+			
+			echo "<script type='text/javascript'>
+				// Immediately execute when script loads
+				(function() {
+					// Ensure jQuery is loaded
+					if (typeof jQuery === 'undefined') {
+						console.error('jQuery not loaded');
+						return;
+					}
+
+					// Disable form resubmission on refresh
+					if (window.history.replaceState) {
+						window.history.replaceState(null, null, window.location.href);
+					}
+
+					// Function to clean up modal
+					function cleanupModal() {
+						try {
+							// Remove all event listeners from the form
+							jQuery('form').each(function() {
+								jQuery(this).off();
+								this.onsubmit = null;
+							});
+
+							// Disable all form elements
+							jQuery('form :input').prop('disabled', true);
+
+							// Close bootstrap modal with both methods
+							var modals = jQuery('.modal');
+							modals.each(function() {
+								jQuery(this).modal('hide').remove();
+							});
+
+							// Clean up modal artifacts
+							jQuery('body').removeClass('modal-open').css('padding-right', '');
+							jQuery('.modal-backdrop').remove();
+
+							// Force any remaining modals closed
+							jQuery('.modal').hide().remove();
+						} catch (e) {
+							console.error('Modal cleanup error:', e);
+						}
+					}
+
+					// Execute cleanup
+					cleanupModal();
+
+					// Redirect after delay
+					setTimeout(function() {
+						window.location.href = '../projectmanagement/projectmanagement.php';
+					}, 1500);
+
+				})();
+			</script>";
 		}else{
 			$queryaud1 = "INSERT INTO `sys_audit` (module,remarks,userid) VALUES ('$moduleid','$auditRemarks2','$taskUserid')";
 			$resaud1 = mysqli_query($conn, $queryaud1);
 			// $sql2=mysqli_query($conn,"CALL insertAudit('$moduleid','$auditRemarks2','$taskUserid')");
-			echo "<div class='alert alert-danger fade in'>";
-			echo "Failed to save information!";   		
+			echo "<div style='text-align: center; padding: 20px; background-color: #f44336; color: white; margin: 20px;'>";
+			echo "<h3>Failed to save task</h3>";
 			echo "</div>";
 		}
 	}else{
 		$queryaud1 = "INSERT INTO `sys_audit` (module,remarks,userid) VALUES ('$moduleid','$auditRemarks3','$taskUserid')";
 		$resaud1 = mysqli_query($conn, $queryaud1);
 		
-		// $sql2=mysqli_query($conn,"CALL insertAudit('$moduleid','$auditRemarks3','$taskUserid')");
+		// Debug query to see what exists
+		$debugQuery = "SELECT * FROM pm_projecttasktb 
+					  WHERE subject = '$taskSubject' 
+					  AND projectid = '$taskProjectOwner' 
+					  AND classificationid = '$taskClassification'";
+		$debugResult = mysqli_query($conn, $debugQuery);
+		$existingTask = mysqli_fetch_assoc($debugResult);
+		
 		echo "<div class='alert alert-danger fade in'>";
-		echo "Duplicate Entry, Please check the details again.";   		
+		echo "Duplicate Entry Found:<br>";
+		echo "Subject: " . htmlspecialchars($taskSubject) . "<br>";
+		echo "Project: " . htmlspecialchars($taskProjectOwner) . "<br>";
+		echo "Classification: " . htmlspecialchars($taskClassification) . "<br>";
+		echo "Existing Task ID: " . htmlspecialchars($existingTask['id']) . "<br>";
+		echo "Created By: " . htmlspecialchars($existingTask['createdbyid']) . "<br>";
+		echo "Created On: " . htmlspecialchars($existingTask['created_at']) . "<br>";
+		echo "Debug Query: " . htmlspecialchars($debugQuery);
 		echo "</div>";
 	}
 }else{
@@ -97,7 +195,3 @@ $num_rows = mysqli_num_rows($myresult);
 	echo "</div>";
 }
 ?>
-
-<script type="text/javascript">
-	setTimeout(function(){location.reload();}, 2000);
-</script>
