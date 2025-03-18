@@ -121,6 +121,28 @@ if($usergroupid == 4){
 									</label>
 								</div>	
 							</div>
+
+							<!-- Add this new file upload section -->
+							<div class="col-lg-12">
+								<div class="form-group">
+									<label class="block clearfix">Attach Files</label>
+									<div class="file-upload-wrapper">
+										<div class="custom-file-input">
+											<input type="file" class="form-control" id="attachFile" name="attachFile[]" multiple 
+												accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt" style="display: none;">
+											<button class="btn btn-primary btn-sm upload-btn" type="button" onclick="document.getElementById('attachFile').click();">
+												<i class="fa fa-paperclip"></i> Add Files
+											</button>
+											<button class="btn btn-default btn-sm float-right" type="button" id="clearFiles">
+												<i class="fa fa-times"></i> Clear
+											</button>
+										</div>
+										<div id="fileNameDisplay" class="file-list">
+											<div class="text-muted">No files selected</div>
+										</div>
+									</div>
+								</div>
+							</div>
 						</div>	
 						<div class="clearfix">
 							<div id="flash5"></div>	
@@ -154,6 +176,114 @@ if($usergroupid == 4){
 		autoclose: true,
 		todayHighlight: true
 	})
+</script>
+
+<!-- Add these styles to the head section or your CSS file -->
+<style>
+.file-upload-wrapper {
+    border: 2px dashed #ddd;
+    padding: 15px;
+    border-radius: 6px;
+    background: #f9f9f9;
+}
+
+.custom-file-input {
+    margin-bottom: 10px;
+}
+
+.file-list {
+    margin-top: 10px;
+    font-size: 13px;
+    color: #666;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.file-row {
+    display: flex;
+    align-items: center;
+    padding: 4px 8px;
+    background: white;
+    border: 1px solid #eee;
+    margin-bottom: 4px;
+    border-radius: 4px;
+}
+
+.file-row i.fa-file-o {
+    margin-right: 8px;
+    color: #666;
+}
+
+.file-row .remove-file {
+    margin-left: auto;
+    color: #dc3545;
+    border: none;
+    background: none;
+    padding: 0 4px;
+}
+
+.file-row .remove-file:hover {
+    color: #bd2130;
+}
+
+.upload-btn {
+    margin-right: 8px;
+}
+
+#clearFiles {
+    float: right;
+}
+</style>
+
+<!-- Add this JavaScript before the closing body tag -->
+<script>
+// File change handler
+$('#attachFile').on('change', function() {
+    const files = this.files;
+    const fileDisplay = $('#fileNameDisplay');
+    
+    if (files.length === 0) {
+        fileDisplay.html('<div class="text-muted">No files selected</div>');
+        return;
+    }
+    
+    let fileList = '';
+    for (let i = 0; i < files.length; i++) {
+        fileList += `<div class="file-row" data-index="${i}">
+            <i class="fa fa-file-o"></i> ${files[i].name}
+            <button type="button" class="btn btn-xs btn-link remove-file" style="color: red; padding: 0 4px;">
+                <i class="fa fa-times"></i>
+            </button>
+        </div>`;
+    }
+    
+    fileDisplay.html(fileList);
+});
+
+// Individual file removal
+$('#fileNameDisplay').on('click', '.remove-file', function(e) {
+    e.preventDefault();
+    const fileIndex = $(this).parent().data('index');
+    const input = $('#attachFile')[0];
+    
+    const dt = new DataTransfer();
+    const { files } = input;
+    
+    for (let i = 0; i < files.length; i++) {
+        if (i !== fileIndex) {
+            dt.items.add(files[i]);
+        }
+    }
+    
+    input.files = dt.files;
+    $('#attachFile').trigger('change');
+});
+
+// Clear all files
+$('#clearFiles').on('click', function() {
+    $('#attachFile').val('');
+    $('#fileNameDisplay').html('<div class="text-muted">No files selected</div>');
+});
 </script>
 
 

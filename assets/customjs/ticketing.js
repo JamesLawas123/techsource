@@ -59,47 +59,40 @@ $(document).ready(function() {
             ticketProjectOwner: {
                 validators: {
                     notEmpty: {
-                        message: 'The owner is required'
-                    }                            
+                        message: 'The project owner is required'
+                    }
                 }
             },
 			ticketClassification: {
                 validators: {
                     notEmpty: {
                         message: 'The classification is required'
-                    }                            
+                    }
                 }
             },
 			ticketPriority: {
                 validators: {
                     notEmpty: {
                         message: 'The priority level is required'
-                    }                            
+                    }
                 }
             },
 			ticketSubject: {
                 validators: {
                     notEmpty: {
                         message: 'The subject is required'
-                    }                            
+                    }
                 }
             },
 			ticketTargetDate: {
                 validators: {
                     notEmpty: {
-                        message: 'Target Date is required'
+                        message: 'Target date is required'
                     },
 					date: {
 						format: 'YYYY-MM-DD',
 						message: 'The date is not valid. Should be in YYYY-MM-DD'
 					}
-                }
-            },
-			description: {
-                validators: {
-                    notEmpty: {
-                        message: 'The description is required'
-                    }                            
                 }
             }
 		}
@@ -107,57 +100,138 @@ $(document).ready(function() {
 	.on('success.field.bv', function(e, data) {
          console.log(data.field, data.element, '-->success');
     });
-	$('#submitTicketBtn').click(function() {
+	$('#submitTicketBtn').click(function(e) {
+		e.preventDefault();
+		
+		// Prevent multiple clicks
+		var $btn = $(this);
+		if ($btn.prop('disabled')) {
+			return;
+		}
+
 		$('#ticketInfo').bootstrapValidator('validate');
 		var bootstrapValidator = $('#ticketInfo').data('bootstrapValidator');
-		var stat1 = bootstrapValidator.isValid();
-		if(stat1=='1')
-		{
-			var ticketUserid = $("#ticketUserid").val();	
-			var ticketProjectOwner = $("#ticketProjectOwner").val();	
-			var ticketClassification = $("#ticketClassification").val();	
-			var ticketPriority = $("#ticketPriority").val();	
-			var ticketSubject = encodeURIComponent($("#ticketSubject").val());	
-			var ticketTargetDate = $("#ticketTargetDate").val();	
-			var description= CKEDITOR.instances.description.getData();
-			var description = encodeURIComponent(description);	
-			
-			var dataString = 'ticketUserid='+ ticketUserid
-							+'&ticketProjectOwner='+ ticketProjectOwner
-							+'&ticketClassification='+ ticketClassification
-							+'&ticketPriority='+ ticketPriority
-							+'&ticketSubject='+ ticketSubject
-							+'&ticketTargetDate='+ ticketTargetDate
-							+'&description='+ description;
-			
-			// alert(taskAssignee2);
+
+		if (bootstrapValidator.isValid()) {
+			// Disable the button immediately
+			$btn.prop('disabled', true);
+
+			// Create FormData object
+			var formData = new FormData();
+
+			// Add form fields manually to avoid duplicates
+			formData.append('ticketUserid', $('#ticketUserid').val());
+			formData.append('ticketProjectOwner', $('#ticketProjectOwner').val());
+			formData.append('ticketClassification', $('#ticketClassification').val());
+			formData.append('ticketPriority', $('#ticketPriority').val());
+			formData.append('ticketSubject', $('#ticketSubject').val());
+			formData.append('ticketTargetDate', $('#ticketTargetDate').val());
+			formData.append('description', CKEDITOR.instances.description.getData());
+
+			// Add files if present
+			var fileInput = document.getElementById('attachFile');
+			if (fileInput && fileInput.files.length > 0) {
+				for (var i = 0; i < fileInput.files.length; i++) {
+					formData.append('attachFile[]', fileInput.files[i]);
+				}
+			}
+
+			// Debug: Log form data
+			for (var pair of formData.entries()) {
+				console.log(pair[0] + ': ' + pair[1]);
+			}
+
 			$.ajax({
-				type: "GET",
+				type: "POST",
 				url: "saveticket.php",
-				data: dataString,
-				cache: false,									
-						beforeSend: function(html) 
-							{			   
-								$("#flash5").show();
-								$("#flash5").html('<img src="ajax-loader.gif" align="absmiddle">&nbsp;Saving...Please Wait.');				
-							},															
-						success: function(html)
-						    {
-								$("#insert_search5").show();
-								$('#insert_search5').empty();
-								$("#insert_search5").append(html);
-								$("#flash5").hide();																		   
-						   },
-						error: function(html)
-						    {
-								$("#insert_search5").show();
-								$('#insert_search5').empty();
-								$("#insert_search5").append(html);
-								$("#flash5").hide();													   												   		
-						   }											   
+				data: formData,
+				processData: false,
+				contentType: false,
+				cache: false,
+				beforeSend: function() {
+					$("#flash5").show().html('<i class="fa fa-spinner fa-spin"></i>&nbsp;Saving...Please Wait.');
+				},
+				success: function(response) {
+					console.log('Raw response:', response); // Debug log
+
+					$("#flash5").hide();
+					
+					try {
+						// If response is already an object, use it directly
+						if (typeof response === 'object') {
+							handleResponse(response);
+						} else {
+							// Try to parse JSON string
+							const result = JSON.parse(response);
+							handleResponse(result);
+						}
+					} catch (e) {
+						console.error('Parse error:', e); // Debug log
+						console.log('Response that failed to parse:', response); // Debug log
+						$("#insert_search5").show().html(
+							'<div class="alert alert-danger">' +
+							'Server response error. Check console for details.<br>' +
+							'Error: ' + e.message +
+							'</div>'
+						);
+						$btn.prop('disabled', false);
+					}
+				},
+				error: function(xhr, status, error) {
+					console.error('Ajax error:', {
+						status: status,
+						error: error,
+						response: xhr.responseText
+					});
+					$("#flash5").html(
+						'<div class="alert alert-danger">' +
+						'Error saving ticket. Status: ' + status + '<br>' +
+						'Error: ' + error +
+						'</div>'
+					);
+					$btn.prop('disabled', false);
+				}
 			});
 		}
-	});	
+
+		function handleResponse(result) {
+			if (result.status === 'success') {
+				handleSuccessfulSave(result.message);
+			} else {
+				$("#insert_search5").show().html(
+					'<div class="alert alert-danger">' + 
+					(result.message || 'Unknown error occurred') + 
+					'</div>'
+				);
+				$btn.prop('disabled', false);
+			}
+		}
+	});
+
+	function handleSuccessfulSave(message) {
+		// Show success message
+		$("#flash5").html('<div class="alert alert-success">' +
+			'<i class="fa fa-check-circle"></i> ' +
+			(message || 'Ticket saved successfully!') +
+		'</div>').show();
+		
+		// Clear any existing messages
+		$("#insert_search5").empty();
+		
+		// Disable form inputs
+		$('#ticketInfo :input').prop('disabled', true);
+		
+		// Close modal after delay
+		setTimeout(function() {
+			$('.modal').modal('hide');
+			// Reload the page or update the ticket list
+			if (typeof loadTickets === 'function') {
+				loadTickets();
+			} else {
+				location.reload();
+			}
+		}, 1500);
+	}
 });
 
 
