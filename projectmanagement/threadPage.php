@@ -943,11 +943,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     <!-- Tasks tab -->
                     <div class="tab-pane" id="tasks-tab">
-                        <div class="clearfix" style="margin-bottom: 10px;">
-                            <button class="btn btn-primary btn-sm pull-right" onclick="showAddSubTaskModal()">
-                                <i class="ace-icon fa fa-plus"></i>
-                                Add Subtask
-                            </button>
+                        <div class="clearfix" style="margin-bottom: 10px;">		
+							<div class="text-right" style="margin-bottom: 15px;">
+								<button onclick="showAddSubTaskModal(<?php echo $task_id; ?>)" class="btn btn-primary btn-sm">
+									<i class="ace-icon fa fa-plus"></i>
+									Add Subtask
+								</button>
+							</div>
                         </div>
                         <div id="task-list">
                             <div class="text-center">
