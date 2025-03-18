@@ -12,7 +12,7 @@ $conn = connectionDB();
 	<table class="table table-striped table-bordered table-hover" id="dataTables-taskpmdone">
 		<thead>
 			<tr>
-				<th></th>
+				<th>Task ID</th>
 				<th>Tracker</th>
 				<th>Status</th>
 				<th>Priority</th>
@@ -85,38 +85,43 @@ $conn = connectionDB();
 			}
 			/*------get hours---------*/
 			$ts1 = strtotime($myTaskStartdate);
+			$ts2 = ($myTaskEnddate == null || $myTaskEnddate == '1900-01-1') ? strtotime($nowdateunix) : strtotime($myTaskEnddate);
 			
-			if(($myTaskEnddate == null)||($myTaskEnddate == '1900-01-1')){$ts2 = strtotime($nowdateunix);}else{$ts2 = strtotime($myTaskEnddate);}
-			// $seconds_diff = $ts2 - $ts1;
+			// Initialize $seconds_diff with a default value
+			$seconds_diff = 0;
+
 			if($ts1 > $ts2){
-				$seconds_diff = date("d",$ts1 - $ts2); 
-			}elseif($ts1 < $ts2){
-				$seconds_diff = date("d",$ts2 - $ts1); 
+				$seconds_diff = date("d", $ts1 - $ts2); 
+			} elseif($ts1 < $ts2){
+				$seconds_diff = date("d", $ts2 - $ts1); 
 			}
 			 // from today
 			if($myTaskStatusid == 6){$myClass = 'success';}elseif($myTaskStatusid == 2){$myClass = 'info';}elseif($myTaskStatusid == 3){$myClass = 'warning';}else{$myClass = 'danger';}
 		?>
 			<tr class="<?php echo $myClass; ?>">
-				<td><?php echo $counter;?></td>
+				<td><?php echo $row['id'];?></td>
 				<td><?php echo $row['classification'];?></td>
 				<td><?php echo $row['statusname'];?></td>
 				<td><?php echo $row['priorityname'];?></td>
 				<td><?php echo $row['subject'];?></td>
 				<td>
-					<?php
-						$count = 0;
-						$myqueryxx2 = "SELECT pm_taskassigneetb.taskid,pm_taskassigneetb.assigneeid,
-										sys_usertb.user_firstname,sys_usertb.user_lastname
-										FROM pm_taskassigneetb
-										LEFT JOIN sys_usertb ON sys_usertb.id=pm_taskassigneetb.assigneeid
-										WHERE pm_taskassigneetb.taskid = '$taskId' ";
-						$myresultxx2 = mysqli_query($conn, $myqueryxx2);
-						while($rowxx2 = mysqli_fetch_assoc($myresultxx2)){
-							if ($count++ > 0) echo ",";
-							echo $rowxx2['user_firstname'];
-						}
-					?>
-				</td>
+															<?php
+																$assigneeIds = explode(',', $row['assignee']); // Assuming $row['assignee'] is a comma-separated string of IDs
+																$assigneeNames = [];
+
+																foreach ($assigneeIds as $assigneeId) {
+																	$assigneeQuery = "SELECT user_firstname, user_lastname FROM sys_usertb WHERE id = '$assigneeId'";
+																	$assigneeResult = mysqli_query($conn, $assigneeQuery);
+																	if ($assigneeRow = mysqli_fetch_assoc($assigneeResult)) {
+																		$assigneeNames[] = '* ' . implode(' ', [$assigneeRow['user_firstname'], $assigneeRow['user_lastname']]);
+																	} else {
+																		$assigneeNames[] = "* Unknown Assignee";
+																	}
+																}
+
+																echo implode('<br>', $assigneeNames);
+															?>
+														</td>
 				<td><?php echo $row['projectname'];?></td>
 				<td><?php echo $row['deadline'];?></td>
 				<td><?php echo $seconds_diff." days";?></td>

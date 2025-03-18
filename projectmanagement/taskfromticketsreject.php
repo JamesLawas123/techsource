@@ -8,7 +8,7 @@ $conn = connectionDB();
 	<table class="table table-striped table-bordered table-hover" id="dataTables-tasktbticketsreject">
 		<thead>
 			<tr>
-				<th></th>
+				<th>Task ID</th>
 				<th>Tracker</th>
 				<th>Status</th>
 				<th>Priority</th>
@@ -70,7 +70,7 @@ $conn = connectionDB();
 			if($myTaskStatusid == 6){$myClass = 'success';}elseif($myTaskStatusid == 2){$myClass = 'info';}elseif($myTaskStatusid == 3){$myClass = 'warning';}else{$myClass = 'danger';}
 		?>
 			<tr class="<?php echo $myClass; ?>">
-				<td><?php echo $counter;?></td>
+				<td><?php echo $row['id'];?></td>
 				<td><?php echo $row['classification'];?></td>
 				<td><?php echo $row['statusname'];?></td>
 				<td><?php echo $row['priorityname'];?></td>

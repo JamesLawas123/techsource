@@ -29,13 +29,18 @@ $conn = connectionDB();
 											<select class="form-control" id="taskProjectOwner" name="taskProjectOwner">
 												<option value="">Select Owner</option>
 												<?php 
-													$query66 = "SELECT id,projectname FROM sys_projecttb WHERE statusid <> 6";
+													$query66 = "SELECT a.id,a.projectname, b.clientname												
+													FROM sys_projecttb a
+													LEFT JOIN  sys_clienttb b on a.clientid = b.id
+													WHERE statusid <> 6";
+													
 													$result66 = mysqli_query($conn, $query66);
 													while($row66 = mysqli_fetch_assoc($result66)){
 														$projectname=mb_convert_case($row66['projectname'], MB_CASE_TITLE, "UTF-8");
 														$projectid=$row66['id'];
+														$clientname=mb_convert_case($row66['clientname'], MB_CASE_TITLE, "UTF-8");
 												?>
-												<option value="<?php echo $projectid;?>"><?php echo $projectname;?></option>
+												<option value="<?php echo $projectid;?>"><?php echo $projectname."-".$clientname;?></option>
 												<?php } ?>
 											</select>
 										</span>

@@ -68,7 +68,8 @@ include('proxy.php');
 											<table class="table table-striped table-bordered table-hover" id="dataTables-tasktb">
 												<thead>
 													<tr>
-														<th></th>
+														
+														<th>Task ID</th>
 														<th>Tracker</th>
 														<th>Status</th>
 														<th>Priority</th>
@@ -161,24 +162,28 @@ include('proxy.php');
 													if($myTaskStatusid == 6){$myClass = 'success';}elseif($myTaskStatusid == 2){$myClass = 'info';}elseif($myTaskStatusid == 3){$myClass = 'warning';}else{$myClass = 'danger';}
 												?>
 													<tr class="<?php echo $myClass; ?>">
-														<td><?php echo $counter;?></td>
+														
+														<td><?php echo $row['id'];?></td>
 														<td><?php echo $row['classification'];?></td>
 														<td><?php echo $row['statusname'];?></td>
 														<td><?php echo $row['priorityname'];?></td>
 														<td><?php echo $row['subject'];?></td>
 														<td>
 															<?php
-																$count = 0;
-																$myqueryxx2 = "SELECT pm_taskassigneetb.taskid,pm_taskassigneetb.assigneeid,
-																			sys_usertb.user_firstname,sys_usertb.user_lastname
-																			FROM pm_taskassigneetb
-																			LEFT JOIN sys_usertb ON sys_usertb.id=pm_taskassigneetb.assigneeid
-																			WHERE pm_taskassigneetb.taskid = '$taskId' ";
-																$myresultxx2 = mysqli_query($conn, $myqueryxx2);
-																while($rowxx2 = mysqli_fetch_assoc($myresultxx2)){
-																	if ($count++ > 0) echo ",";
-																	echo $rowxx2['user_firstname'];
+																$assigneeIds = explode(',', $row['assignee']); // Assuming $row['assignee'] is a comma-separated string of IDs
+																$assigneeNames = [];
+
+																foreach ($assigneeIds as $assigneeId) {
+																	$assigneeQuery = "SELECT user_firstname, user_lastname FROM sys_usertb WHERE id = '$assigneeId'";
+																	$assigneeResult = mysqli_query($conn, $assigneeQuery);
+																	if ($assigneeRow = mysqli_fetch_assoc($assigneeResult)) {
+																		$assigneeNames[] = '* ' . implode(' ', [$assigneeRow['user_firstname'], $assigneeRow['user_lastname']]);
+																	} else {
+																		$assigneeNames[] = "* Unknown Assignee";
+																	}
 																}
+
+																echo implode('<br>', $assigneeNames);
 															?>
 														</td>
 														<td><?php echo $row['projectname'];?></td>

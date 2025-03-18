@@ -114,16 +114,7 @@ if($usergroupid == 4){
 								</div>
 							</div>
 							
-							<div class="col-lg-12">
-								<div class="form-group">
-									<label class="block clearfix">Description
-										<textarea id="description" name="description" rows="5" cols="80"></textarea>
-									</label>
-								</div>	
-							</div>
-
-							<!-- Add this new file upload section -->
-							<div class="col-lg-12">
+							<div class="col-lg-6">
 								<div class="form-group">
 									<label class="block clearfix">Attach Files</label>
 									<div class="file-upload-wrapper">
@@ -142,6 +133,13 @@ if($usergroupid == 4){
 										</div>
 									</div>
 								</div>
+							</div>
+							<div class="col-lg-12">
+								<div class="form-group">
+									<label class="block clearfix">Description
+										<textarea id="description" name="description" rows="5" cols="80"></textarea>
+									</label>
+								</div>	
 							</div>
 						</div>	
 						<div class="clearfix">
@@ -175,7 +173,13 @@ if($usergroupid == 4){
 	$('.date-picker').datepicker({
 		autoclose: true,
 		todayHighlight: true
-	})
+	});
+
+	// Set current date as default value for the date-picker
+	$(document).ready(function() {
+		var today = new Date().toISOString().split('T')[0];
+		$('#ticketTargetDate').val(today);
+	});
 </script>
 
 <!-- Add these styles to the head section or your CSS file -->

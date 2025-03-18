@@ -4,11 +4,8 @@
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
 		<meta charset="utf-8" />
 		<title>Dashboard - RedBel</title>
-		<!-- Multiple favicon formats for better browser support -->
-		<link rel="icon" type="image/jpeg" href="uploads/images/favicon.jpg">
-		<link rel="shortcut icon" type="image/jpeg" href="uploads/images/favicon.jpg">
-		<link rel="apple-touch-icon" href="uploads/images/favicon.jpg">
-
+		<!-- Favicon -->
+		
 		<meta name="description" content="overview &amp; stats" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
 
@@ -383,3 +380,4 @@
 		
 	</body>
 </html>
+

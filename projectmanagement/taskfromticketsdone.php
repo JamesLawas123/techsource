@@ -8,7 +8,7 @@ $conn = connectionDB();
 	<table class="table table-striped table-bordered table-hover" id="dataTables-tasktbticketsdone">
 		<thead>
 			<tr>
-				<th></th>
+				<th>Task ID</th>
 				<th>Tracker</th>
 				<th>Status</th>
 				<th>Priority</th>
@@ -61,16 +61,20 @@ $conn = connectionDB();
 
 			// $seconds_diff = $ts2 - $ts1;
 			// $seconds_diff = date("d",$ts2 - $ts1); 
-			if($ts1 > $ts2){
-				$seconds_diff = date("d",$ts1 - $ts2); 
-			}elseif($ts1 < $ts2){
-				$seconds_diff = date("d",$ts2 - $ts1); 
+			$seconds_diff = 0; // Initialize with a default value
+
+			if ($ts1 > $ts2) {
+				$seconds_diff = date("d", $ts1 - $ts2); 
+			} elseif ($ts1 < $ts2) {
+				$seconds_diff = date("d", $ts2 - $ts1); 
+			} else {
+				$seconds_diff = 0; // or any other default value you deem appropriate
 			}
 			 // from today
 			if($myTaskStatusid == 6){$myClass = 'success';}elseif($myTaskStatusid == 2){$myClass = 'info';}elseif($myTaskStatusid == 3){$myClass = 'warning';}else{$myClass = 'danger';}
 		?>
 			<tr class="<?php echo $myClass; ?>">
-				<td><?php echo $counter;?></td>
+				<td><?php echo $row['id'];?></td>
 				<td><?php echo $row['classification'];?></td>
 				<td><?php echo $row['statusname'];?></td>
 				<td><?php echo $row['priorityname'];?></td>
