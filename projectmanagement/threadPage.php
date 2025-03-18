@@ -110,6 +110,8 @@ if (mysqli_num_rows($task_result) > 0) {
 		<![endif]-->
 	</head>
 
+        
+
 	<body class="no-skin">
 		<div id="navbar" class="navbar navbar-default          ace-save-state">
 			<div class="navbar-container ace-save-state" id="navbar-container">
@@ -504,7 +506,7 @@ if (mysqli_num_rows($task_result) > 0) {
 							</li>
 
 							<li>
-								<a href="#">More Pages</a>
+								<a href="Projectmanagement.php">Task management</a>
 							</li>
 							<li class="active">Thread Page</li>
 						</ul><!-- /.breadcrumb -->
@@ -844,7 +846,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 Save
             </button>
         </div> -->
-    </div>
+
+		<div style="margin-bottom: 15px; text-align: right; margin-right: 80%;">
+			<a href="projectmanagement.php" class="btn btn-primary btn-sm">
+				<i class="ace-icon fa fa-arrow-left"></i>
+				Back
+			</a>
+   		</div>
+</div>
 
 	
 
