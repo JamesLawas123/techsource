@@ -32,7 +32,7 @@ $auditRemarks1 = "UPDATED TICKET"." | ".$ticketSubjectUp;
 $auditRemarks2 = "ATTEMPT TO UPDATE TICKET, FAILED"." | ".$ticketSubjectUp;
 $auditRemarks3 = "ATTEMPT TO UPDATE TICKET, DUPLICATE"." | ".$ticketSubjectUp;
 
-	if($ticketStatus != 6){
+	if($ticketStatus != 6 && $ticketStatus != 2 && $ticketStatus != 3 && $ticketStatus != 4){
 		$myqueryxx = "UPDATE pm_projecttasktb
 								SET 
 								description = '$descriptionupdate',
@@ -58,7 +58,7 @@ $auditRemarks3 = "ATTEMPT TO UPDATE TICKET, DUPLICATE"." | ".$ticketSubjectUp;
 		}
 	}else{
 		echo "<div class='alert alert-danger fade in'>";
-		echo "You dont have permission to tag as DONE, please contact your provider.";   		
+		echo "You dont have permission to update this status, please contact your provider.";   		
 		echo "</div>";
 	}
 ?>
