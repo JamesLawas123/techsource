@@ -51,8 +51,6 @@ function addComment($mysqlconn, $taskId, $userId, $message, $subject = '', $pare
         return ['status' => 'skip', 'message' => 'Empty message and no files'];
     }
 
-    // Normalize line endings before escaping
-    $message = str_replace(["\r\n", "\r", "\n"], "\n", $message);
     $subject = mysqli_real_escape_string($mysqlconn, $subject);
     $message = mysqli_real_escape_string($mysqlconn, $message);
     $datetimecreated = date('Y-m-d H:i:s');

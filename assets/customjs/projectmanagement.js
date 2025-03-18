@@ -602,7 +602,7 @@ $(document).ready(function() {
     $('#subtaskInfo').bootstrapValidator({
         message: 'This value is not valid',
         live: 'enabled',
-        submitButtons: 'button[name="submitSubtaskBtn"]',
+        submitButtons: 'button[name="submitSubtaskBtn"]',            
         feedbackIcons: {
             required: 'glyphicon glyphicon-asterisk',
             valid: 'glyphicon glyphicon-ok',
@@ -614,35 +614,35 @@ $(document).ready(function() {
                 validators: {
                     notEmpty: {
                         message: 'The project owner is required'
-                    }
+                    }                            
                 }
             },
             taskClassification: {
                 validators: {
                     notEmpty: {
                         message: 'The classification is required'
-                    }
+                    }                            
                 }
             },
             subtaskPriority: {
                 validators: {
                     notEmpty: {
                         message: 'The priority level is required'
-                    }
+                    }                            
                 }
             },
             subtaskSubject: {
                 validators: {
                     notEmpty: {
                         message: 'The subject is required'
-                    }
+                    }                            
                 }
             },
             'subtaskAssignee[]': {
                 validators: {
                     notEmpty: {
                         message: 'At least one assignee is required'
-                    }
+                    }                            
                 }
             },
             subtaskTargetDate: {
@@ -675,7 +675,7 @@ $(document).ready(function() {
         $('#subtaskInfo').bootstrapValidator('validate');
         var bootstrapValidator = $('#subtaskInfo').data('bootstrapValidator');
         var stat1 = bootstrapValidator.isValid();
-        if (stat1) {
+        if(stat1=='1') {
             // Get CKEditor content
             var description = CKEDITOR.instances.subtaskDescription.getData();
             
@@ -717,26 +717,5 @@ $(document).ready(function() {
         }
     });
 });
-
-function showAddSubTaskModal(taskId) {
-    // Load the modal content via AJAX
-    $.get('add_subtask.php', { taskId: taskId }, function(data) {
-        // Create modal if it doesn't exist
-        if (!$('#modal-subtask').length) {
-            $('body').append('<div class="modal fade" id="modal-subtask" tabindex="-1" role="dialog">' +
-                '<div class="modal-dialog modal-lg" role="document">' +
-                '<div class="modal-content"></div>' +
-                '</div>' +
-                '</div>');
-        }
-        
-        // Set the modal content and show it
-        $('#modal-subtask .modal-content').html(data);
-        $('#modal-subtask').modal('show');
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        console.error('Error loading subtask modal:', errorThrown);
-        alert('Error loading the subtask form. Please try again.');
-    });
-}
 
 

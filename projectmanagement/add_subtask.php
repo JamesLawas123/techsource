@@ -10,12 +10,6 @@ $conn = connectionDB();
 <!-- page specific plugin styles -->
 <link rel="stylesheet" href="../assets/css/chosen.min.css" />
 
-<!-- Core DataTables -->
-<script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
-
-<!-- DataTables Bootstrap 4 -->
-<script src="https://cdn.datatables.net/1.10.25/js/dataTables.bootstrap4.min.js"></script>
-
 <div class="modal-body">
     <style>
         /* Add this at the top of the modal-body */
@@ -178,7 +172,7 @@ $conn = connectionDB();
     </div>
 </div>
 
-
+<script src="../assets/customjs/projectmanagement.js"></script>
 <script src="../assets/customjs/jquery.tagsinput.js"></script>
 <script src="../assets/js/jquery-ui.custom.min.js"></script>
 <script src="../assets/js/chosen.jquery.min.js"></script>
