@@ -27,6 +27,7 @@ include('proxy.php');
 ?>
 <!DOCTYPE html>
 <link rel="../stylesheet" href="../css/bootstrapValidator.min.css"/> 
+
 <style>
 .input-xs {
     height: 22px;

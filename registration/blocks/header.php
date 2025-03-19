@@ -6,7 +6,7 @@ include('../check_session.php');
 	<head>
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
 		<meta charset="utf-8" />
-		<title>RedBel IT Solutions</title>
+		<title></title>
 
 		<!-- Favicon --> 
 		<!--[if IE]><link rel="shortcut icon" href="images/favicon.ico"><![endif]-->

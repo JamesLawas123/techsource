@@ -7,7 +7,7 @@ $sql = "SELECT * FROM sys_usertb WHERE id = $user_id";
 $result = mysqli_query($mysqlconn, $sql);
 $user = mysqli_fetch_assoc($result);
 $moduleid=8;
-include('proxy.php');
+
 
 // Map status ID to color
 $currentColor = 'green'; // Default color

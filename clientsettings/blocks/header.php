@@ -6,7 +6,10 @@ include('../check_session.php');
 	<head>
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
 		<meta charset="utf-8" />
-		<title>RedBel IT Solutions</title>
+		<title></title>
+
+		<!-- Favicon -->
+		<link rel="icon" type="image/png" href="assets/images/favicon/favicon-32x32.png" />
 
 		<!-- Favicon --> 
 		<!--[if IE]><link rel="shortcut icon" href="images/favicon.ico"><![endif]-->
@@ -321,7 +324,7 @@ include('../check_session.php');
 
 						<li class="light-blue dropdown-modal">
 							<a data-toggle="dropdown" href="#" class="dropdown-toggle">
-								<img class="nav-user-photo" src="../assets/images/avatars/user.jpg" alt="Jason's Photo" />
+								<img class="nav-user-photo" src="../assets/images/avatars/user.png" alt="Jason's Photo" />
 								<span class="user-info">
 									<small>Welcome,</small>
 									<?php echo $userfirstname; ?>

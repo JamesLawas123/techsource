@@ -58,7 +58,7 @@ $conn = connectionDB();
 	<head>
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
 		<meta charset="utf-8" />
-		<title>Login Page - RedBel IT Solutions</title>
+		<title>Login Page </title>
 
 		<meta name="description" content="User login page" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
@@ -217,7 +217,7 @@ $conn = connectionDB();
 									<div class="panel-heading">
 										<h3 class="panel-title">
 											<span class="glyphicon glyphicon-log-in"></span> 
-											HRIS Log-in
+											 Log-in
 										</h3>
 									</div>
 									<div class="panel-body">

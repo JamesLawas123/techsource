@@ -6,12 +6,12 @@ include('../check_session.php');
 	<head>
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
 		<meta charset="utf-8" />
-		<title>RedBel IT Solutions</title>
+		<title></title>
 
-		<!-- Favicon --> 
-		<!--[if IE]><link rel="shortcut icon" href="images/favicon.ico"><![endif]-->
-		<link rel="apple-touch-icon-precomposed" href="../assets/images/logo/logo.png">
-		<link rel="icon" href="../assets/images/logo/logo.png">
+		<!-- Favicon -->
+		<link rel="icon" type="image/png" href="assets/images/favicon/favicon-32x32.png" />
+
+		
 		
 		<meta name="description" content="overview &amp; stats" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
@@ -225,7 +225,7 @@ include('../check_session.php');
 									<ul class="dropdown-menu dropdown-navbar">
 										<li>
 											<a href="#" class="clearfix">
-												<img src="../assets/images/avatars/avatar.png" class="msg-photo" alt="Alex's Avatar" />
+												<!-- <img src="../assets/images/avatars/avatar.png" class="msg-photo" alt="Alex's Avatar" /> -->
 												<span class="msg-body">
 													<span class="msg-title">
 														<span class="blue">Alex:</span>
@@ -242,7 +242,7 @@ include('../check_session.php');
 
 										<li>
 											<a href="#" class="clearfix">
-												<img src="../assets/images/avatars/avatar3.png" class="msg-photo" alt="Susan's Avatar" />
+												<!-- <img src="../assets/images/avatars/avatar3.png" class="msg-photo" alt="Susan's Avatar" /> -->
 												<span class="msg-body">
 													<span class="msg-title">
 														<span class="blue">Susan:</span>
@@ -259,7 +259,7 @@ include('../check_session.php');
 
 										<li>
 											<a href="#" class="clearfix">
-												<img src="../assets/images/avatars/avatar4.png" class="msg-photo" alt="Bob's Avatar" />
+												<!-- <img src="../assets/images/avatars/avatar4.png" class="msg-photo" alt="Bob's Avatar" /> -->
 												<span class="msg-body">
 													<span class="msg-title">
 														<span class="blue">Bob:</span>
@@ -276,7 +276,7 @@ include('../check_session.php');
 
 										<li>
 											<a href="#" class="clearfix">
-												<img src="../assets/images/avatars/avatar2.png" class="msg-photo" alt="Kate's Avatar" />
+												<!-- <img src="../assets/images/avatars/avatar2.png" class="msg-photo" alt="Kate's Avatar" /> -->
 												<span class="msg-body">
 													<span class="msg-title">
 														<span class="blue">Kate:</span>
@@ -293,7 +293,7 @@ include('../check_session.php');
 
 										<li>
 											<a href="#" class="clearfix">
-												<img src="../assets/images/avatars/avatar5.png" class="msg-photo" alt="Fred's Avatar" />
+												<!-- <img src="../assets/images/avatars/avatar5.png" class="msg-photo" alt="Fred's Avatar" /> -->
 												<span class="msg-body">
 													<span class="msg-title">
 														<span class="blue">Fred:</span>
@@ -321,7 +321,7 @@ include('../check_session.php');
 
 						<li class="light-blue dropdown-modal">
 							<a data-toggle="dropdown" href="#" class="dropdown-toggle">
-								<img class="nav-user-photo" src="../assets/images/avatars/user.jpg" alt="Jason's Photo" />
+							<img class="nav-user-photo" src="../assets/images/avatars/user.png" alt="Jason's Photo" />
 								<span class="user-info">
 									<small>Welcome,</small>
 									<?php echo $userfirstname; ?>

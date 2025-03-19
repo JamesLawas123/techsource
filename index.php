@@ -3,7 +3,7 @@
 	<head>
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
 		<meta charset="utf-8" />
-		<title>Dashboard - RedBel</title>
+		<title>Dashboard</title>
 		<!-- Favicon -->
 		<link rel="icon" type="image/png" href="assets/images/favicon/favicon-32x32.png" />
 		

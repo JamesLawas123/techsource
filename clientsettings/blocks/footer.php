@@ -36,7 +36,7 @@
 	<div class="footer-inner">
 		<div class="footer-content">
 			<span class="bigger-120">
-				<span class="blue bolder">RedBel</span>
+				<span class="blue bolder"></span>
 				Application &copy; 2016
 			</span>
 
