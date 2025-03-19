@@ -9,7 +9,7 @@ include('../check_session.php');
 		<title></title>
 
 		<!-- Favicon -->
-		<link rel="icon" type="image/png" href="assets/images/favicon/favicon-32x32.png" />
+		<link rel="icon" type="image/png" href="../assets/images/favicon/favicon-32x32.png" />
 
 		
 		

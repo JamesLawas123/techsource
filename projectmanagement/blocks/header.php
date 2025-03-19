@@ -7,15 +7,17 @@ include('../check_session.php');
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
 		<meta charset="utf-8" />
 		<title></title>
-
-		<!-- Favicon --> 
+		
+		<!-- Favicon -->
+		<link rel="icon" type="image/png" href="../assets/images/favicon/favicon-32x32.png" />
+		
 		<!--[if IE]><link rel="shortcut icon" href="images/favicon.ico"><![endif]
 		<link rel="apple-touch-icon-precomposed" href="../assets/images/logo/logo.png">
 		<link rel="icon" href="../assets/images/logo/logo.png">-->
 		
 		<meta name="description" content="overview &amp; stats" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-
+		
 		<!-- bootstrap & fontawesome -->
 		<link rel="stylesheet" href="../assets/css/bootstrap.min.css" />
 		<link rel="stylesheet" href="../assets/font-awesome/4.5.0/css/font-awesome.min.css" />

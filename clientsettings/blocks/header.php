@@ -8,16 +8,12 @@ include('../check_session.php');
 		<meta charset="utf-8" />
 		<title></title>
 
-		<!-- Favicon -->
-		<link rel="icon" type="image/png" href="assets/images/favicon/favicon-32x32.png" />
-
-		<!-- Favicon --> 
-		<!--[if IE]><link rel="shortcut icon" href="images/favicon.ico"><![endif]-->
-		<link rel="apple-touch-icon-precomposed" href="../assets/images/logo/logo.png">
-		<link rel="icon" href="../assets/images/logo/logo.png">
 		
+
 		<meta name="description" content="overview &amp; stats" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+		<!-- Favicon -->
+		<link rel="icon" type="image/png" href="../assets/images/favicon/favicon-32x32.png" />
 
 		<!-- bootstrap & fontawesome -->
 		<link rel="stylesheet" href="../assets/css/bootstrap.min.css" />
