@@ -48,11 +48,20 @@ try {
         throw new Exception("Duplicate Entry, Please check the details again.");
     }
 
-    // If no duplicate, proceed with insertion
-    $myqueryxx = "INSERT INTO pm_projecttasktb (createdbyid,classificationid,priorityid,subject,deadline,description,projectid,istask,startdate,enddate)
-                VALUES (?,?,?,?,?,?,?,?,?,?)";
+    // Get current count of tasks for SRN generation
+    $countQuery = "SELECT COUNT(*) as total FROM pm_projecttasktb";
+    $countResult = mysqli_query($conn, $countQuery);
+    $countRow = mysqli_fetch_assoc($countResult);
+    $currentCount = $countRow['total'] + 1;
+    
+    // Generate SRN
+    $srn_id = "SRN:" . date('YmdHis') . $currentCount;
+
+    // Modified insert query to include srn_id
+    $myqueryxx = "INSERT INTO pm_projecttasktb (createdbyid,classificationid,priorityid,subject,deadline,description,projectid,istask,startdate,enddate,srn_id)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?)";
     $stmt = $conn->prepare($myqueryxx);
-    $stmt->bind_param("ssssssssss", 
+    $stmt->bind_param("sssssssssss", 
         $ticketUserid,
         $ticketClassification,
         $ticketPriority,
@@ -62,7 +71,8 @@ try {
         $ticketProjectOwner,
         $ticketIdentification,
         $ticketStartDate,
-        $ticketEndDate
+        $ticketEndDate,
+        $srn_id
     );
 
     if(!$stmt->execute()) {

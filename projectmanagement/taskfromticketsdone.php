@@ -29,7 +29,7 @@ $conn = connectionDB();
 						   pm_projecttasktb.statusid,pm_projecttasktb.priorityid,pm_projecttasktb.createdbyid,pm_projecttasktb.datetimecreated,
 						   pm_projecttasktb.assignee,pm_projecttasktb.projectid,
 						   sys_taskclassificationtb.classification,sys_taskstatustb.statusname,sys_priorityleveltb.priorityname,
-						   sys_projecttb.projectname,pm_projecttasktb.percentdone
+						   sys_projecttb.projectname,pm_projecttasktb.percentdone,pm_projecttasktb.srn_id
 					FROM pm_projecttasktb
 					LEFT JOIN sys_taskclassificationtb ON sys_taskclassificationtb.id=pm_projecttasktb.classificationid
 					LEFT JOIN sys_taskstatustb ON sys_taskstatustb.id=pm_projecttasktb.statusid
@@ -74,7 +74,7 @@ $conn = connectionDB();
 			if($myTaskStatusid == 6){$myClass = 'success';}elseif($myTaskStatusid == 2){$myClass = 'info';}elseif($myTaskStatusid == 3){$myClass = 'warning';}else{$myClass = 'danger';}
 		?>
 			<tr class="<?php echo $myClass; ?>">
-				<td><?php echo $row['id'];?></td>
+				<td><?php echo $row['srn_id'];?></td>
 				<td><?php echo $row['classification'];?></td>
 				<td><?php echo $row['statusname'];?></td>
 				<td><?php echo $row['priorityname'];?></td>

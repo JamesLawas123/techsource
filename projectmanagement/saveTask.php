@@ -59,10 +59,18 @@ $myresult = mysqli_query($conn, $myquery);
 $num_rows = mysqli_num_rows($myresult);
 
 	if($num_rows == 0){
-		// $sql=mysqli_query($conn,"CALL insertTaskInfo('$taskUserid','$taskClassification','$taskPriority','$taskSubject','$taskAssignee','$taskTargetDate','$taskStartDate','$taskEndDate','$description','$taskProjectOwner')");
+		// Get current count of tasks
+		$countQuery = "SELECT COUNT(*) as total FROM pm_projecttasktb";
+		$countResult = mysqli_query($conn, $countQuery);
+		$countRow = mysqli_fetch_assoc($countResult);
+		$currentCount = $countRow['total'] + 1;
 		
-		$myqueryxx = "INSERT INTO pm_projecttasktb (createdbyid,classificationid,priorityid,subject,assignee,deadline,startdate,enddate,description,projectid,istask)
-					VALUES ('$taskUserid','$taskClassification','$taskPriority','$taskSubject','$taskAssignee','$taskTargetDate','$taskStartDate','$taskEndDate','$description','$taskProjectOwner','$taskIdentification')";
+		// Generate SRN
+		$srn_id = "SRN:" . date('YmdHis') . $currentCount;
+		
+		// Modified insert query to include srn_id
+		$myqueryxx = "INSERT INTO pm_projecttasktb (createdbyid, classificationid, priorityid, subject, assignee, deadline, startdate, enddate, description, projectid, istask, srn_id)
+					VALUES ('$taskUserid', '$taskClassification', '$taskPriority', '$taskSubject', '$taskAssignee', '$taskTargetDate', '$taskStartDate', '$taskEndDate', '$description', '$taskProjectOwner', '$taskIdentification', '$srn_id')";
 		$myresultxx = mysqli_query($conn, $myqueryxx);
 		
 		$lastid = mysqli_insert_id($conn); 
