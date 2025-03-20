@@ -8,7 +8,7 @@
 		<link rel="icon" type="image/png" href="assets/images/favicon/favicon-32x32.png" />
 		
 		<meta name="description" content="overview &amp; stats" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
 		<!-- bootstrap & fontawesome -->
 		<link rel="stylesheet" href="assets/css/bootstrap.min.css" />
@@ -43,11 +43,84 @@
 		<script src="assets/js/html5shiv.min.js"></script>
 		<script src="assets/js/respond.min.js"></script>
 		<![endif]-->
+
+		<!-- Add these responsive CSS rules before closing </head> -->
+		<style>
+		  /* Responsive styles */
+		  @media (max-width: 768px) {
+		    .infobox-container {
+		      width: 100%;
+		      margin-bottom: 20px;
+		    }
+		    
+		    .infobox {
+		      width: 100% !important;
+		      margin-bottom: 10px;
+		    }
+
+		    .widget-box {
+		      margin-top: 20px;
+		    }
+
+		    .table-responsive {
+		      overflow-x: auto;
+		    }
+
+		    .nav-search {
+		      width: 100%;
+		      margin-top: 10px;
+		    }
+
+		    .breadcrumbs {
+		      padding: 0 10px;
+		    }
+		  }
+
+		  @media (max-width: 480px) {
+		    .page-header h1 {
+		      font-size: 24px;
+		    }
+
+		    .page-header h1 small {
+		      display: block;
+		      margin-top: 5px;
+		    }
+
+		    .infobox-data-number {
+		      font-size: 20px;
+		    }
+		  }
+		</style>
 	</head>
 
 	<body class="no-skin">
 		<?php include "blocks/header.php"; ?>
 		<?php $conn = connectionDB(); ?>
+
+		<?php
+		// Check if a session is not already started
+		if (session_status() === PHP_SESSION_NONE) {
+			session_start(); // Start the session to access session variables
+		}
+
+		// Use a default value of 0 if 'userid' is not set in the session
+		$user_id = $_SESSION['userid'] ?? 0;
+
+		if ($user_id) {
+			// Fetch user details from the database
+			$userDetailsSql = "SELECT * FROM sys_usertb WHERE id = " . intval($user_id);
+			$userDetailsResult = mysqli_query($conn, $userDetailsSql);
+
+			if ($userDetailsResult && mysqli_num_rows($userDetailsResult) > 0) {
+				$user = mysqli_fetch_assoc($userDetailsResult);
+			} else {
+				$user = [];
+			}
+		} else {
+			// Handle the case where the user is not logged in
+			$user = [];
+		}
+		?>
 
 		<div class="main-container ace-save-state" id="main-container">
 			<?php include "blocks/navigation.php";?>
@@ -85,260 +158,588 @@
 						</div>
 						
 						<div class="row">
-							<div class="col-xs-12">
+							<div class="col-sm-12 col-md-8 col-md-offset-2">
 								<div class="row">
 									<div class="space-6"></div>
-									<div class="col-sm-6 infobox-container">
+									<div class="col-sm-12 col-md-6 infobox-container">
 										
-										<div class="infobox infobox-green">
-											<?php 
-												// $myquery = "SELECT COUNT(id) AS totaltickets FROM pm_projecttasktb WHERE istask = '2'";
-												// $myresult = mysqli_query($conn, $myquery);
-												// while($row = mysqli_fetch_assoc($myresult)){
-												// 	$totaltickets = $row['totaltickets'];
-												// }
-											?>
+										<div class="infobox infobox-green" style="width: 87%;">
 											<div class="infobox-icon">
-												<i class="ace-icon fa fa-comments"></i>
+												<i class="ace-icon fa fa-ticket"></i>
 											</div>
-
 											<div class="infobox-data">
-												<span class="infobox-data-number">100</span>
-												<div class="infobox-content">Total Tickets</div>
-											</div>
-
-											<!--<div class="stat stat-success">8%</div>-->
-										</div>
-
-										<div class="infobox infobox-blue">
-											<?php 
-												// $myquery = "SELECT COUNT(id) AS totalassignment FROM pm_projecttasktb WHERE istask = '1'";
-												// $myresult = mysqli_query($conn, $myquery);
-												// while($row = mysqli_fetch_assoc($myresult)){
-												// 	$totalassignment = $row['totalassignment'];
-												// }
-											?>
-											<div class="infobox-icon">
-												<i class="ace-icon fa fa-twitter"></i>
-											</div>
-
-											<div class="infobox-data">
-												<span class="infobox-data-number">100</span>
-												<div class="infobox-content">Total Assignment</div>
+												<div style="display: flex; justify-content: space-between; width: 100%;">
+													<div>
+														<?php
+														// Get total tickets created by the user where istask = 2
+														$tickets_sql = "SELECT COUNT(*) as ticket_count FROM pm_projecttasktb WHERE createdbyid = " . intval($user_id) . " AND istask = 2";
+														$tickets_result = mysqli_query($conn, $tickets_sql);
+														$ticket_count = 0;
+														
+														if ($tickets_result && mysqli_num_rows($tickets_result) > 0) {
+															$tickets = mysqli_fetch_assoc($tickets_result);
+															$ticket_count = $tickets['ticket_count'];
+														}
+														?>
+														<span class="infobox-data-number"><?php echo $ticket_count; ?></span>
+														<div class="infobox-content">Total Tickets</div>
+													</div>
+												</div>
 											</div>
 										</div>
 
 										<div class="infobox infobox-pink">
-											<?php 
-												// $myquery = "SELECT COUNT(id) AS totalongoingtickets FROM pm_projecttasktb WHERE istask = '2' AND statusid IN ('1','3','4') ";
-												// $myresult = mysqli_query($conn, $myquery);
-												// while($row = mysqli_fetch_assoc($myresult)){
-												// 	$totalongoingtickets = $row['totalongoingtickets'];
-												// 	$percentongoingtickets = ($totalongoingtickets/$totaltickets)*100;
-												// }
-											?>
 											<div class="infobox-progress">
-												<div class="easy-pie-chart percentage" data-percent="50" data-size="55">
-													<span class="percent">50</span>% 
+												<div class="easy-pie-chart percentage" data-percent="100" data-size="55">
 													<?php 
-													// echo round($percentongoingtickets, 2); 
+													// Get count of tickets with statusid = 1 (New)
+													$new_sql = "SELECT COUNT(*) as new_count 
+																FROM pm_projecttasktb 
+																WHERE createdbyid = " . intval($user_id) . "
+																AND statusid = 1
+																AND istask = 2";
+													$new_result = mysqli_query($conn, $new_sql);
+													$new_count = 0;
+													
+													if ($new_result && mysqli_num_rows($new_result) > 0) {
+														$new = mysqli_fetch_assoc($new_result);
+														$new_count = $new['new_count'];
+													}
 													?>
+													<span class="percent"><?php echo $new_count; ?></span>
 												</div>
 											</div>
 											<div class="infobox-data">
-												<span class="infobox-text">&nbsp;&nbsp;&nbsp;&nbsp;Ongoing</span>
-
+												<span class="infobox-text">&nbsp;&nbsp;&nbsp;&nbsp;New</span>
 												<div class="infobox-content">
 													<span class="bigger-110">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Tickets</span>
 												</div>
 											</div>
 										</div>
 
-										<div class="infobox infobox-red">
-											<?php 
-												// $myquery = "SELECT COUNT(id) AS totalongoingassignment FROM pm_projecttasktb WHERE istask = '1' AND statusid IN ('1','3','4') ";
-												// $myresult = mysqli_query($conn, $myquery);
-												// while($row = mysqli_fetch_assoc($myresult)){
-												// 	$totalongoingassignment = $row['totalongoingassignment'];
-												// 	$percentongoingassignment = ($totalongoingassignment/$totalassignment)*100;
-												// }
-											?>
+										<div class="infobox infobox-pink">
 											<div class="infobox-progress">
-												<div class="easy-pie-chart percentage" data-percent="10>" data-size="55">
-													<span class="percent">10</span>%
+												<div class="easy-pie-chart percentage" data-percent="50" data-size="55">
+													<?php 
+													// Get count of tickets with statusid = 3 (In Progress)
+													$in_progress_sql = "SELECT COUNT(*) as in_progress_count 
+																		FROM pm_projecttasktb 
+																		WHERE createdbyid = " . intval($user_id) . "
+																		AND statusid = 3
+																		AND istask = 2";
+													$in_progress_result = mysqli_query($conn, $in_progress_sql);
+													$in_progress_count = 0;
+													
+													if ($in_progress_result && mysqli_num_rows($in_progress_result) > 0) {
+														$in_progress = mysqli_fetch_assoc($in_progress_result);
+														$in_progress_count = $in_progress['in_progress_count'];
+													}
+													?>
+													<span class="percent"><?php echo $in_progress_count; ?></span>
 												</div>
 											</div>
-
 											<div class="infobox-data">
-												<span class="infobox-text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Ongoing</span>
-
+												<span class="infobox-text">&nbsp;&nbsp;&nbsp;&nbsp;In Progress</span>
 												<div class="infobox-content">
-													<span class="bigger-110">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Assignment</span>
+													<span class="bigger-110">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Tickets</span>
 												</div>
 											</div>
 										</div>
 
 										<div class="infobox infobox-orange2">
-											<?php 
-												// $myquery = "SELECT COUNT(id) AS totalrejectticket FROM pm_projecttasktb WHERE istask = '2' AND statusid IN ('2','5') ";
-												// $myresult = mysqli_query($conn, $myquery);
-												// while($row = mysqli_fetch_assoc($myresult)){
-												// 	$totalrejectticket = $row['totalrejectticket'];
-												// 	$percentrejectedticket = ($totalrejectticket/$totaltickets)*100;
-												// }
-											?>
 											<div class="infobox-progress">
 												<div class="easy-pie-chart percentage" data-percent="100" data-size="55">
-													<span class="percent">100</span>%
+													<?php 
+													// Get count of tickets with statusid = 4 (Pending)
+													$pending_sql = "SELECT COUNT(*) as pending_count 
+																	FROM pm_projecttasktb 
+																	WHERE createdbyid = " . intval($user_id) . "
+																	AND statusid = 4
+																	AND istask = 2";
+													$pending_result = mysqli_query($conn, $pending_sql);
+													$pending_count = 0;
+													
+													if ($pending_result && mysqli_num_rows($pending_result) > 0) {
+														$pending = mysqli_fetch_assoc($pending_result);
+														$pending_count = $pending['pending_count'];
+													}
+													?>
+													<span class="percent"><?php echo $pending_count; ?></span>
 												</div>
 											</div>
-
 											<div class="infobox-data">
-												<span class="infobox-text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Reject</span>
-
+												<span class="infobox-text">&nbsp;&nbsp;&nbsp;&nbsp;Pending</span>
 												<div class="infobox-content">
 													<span class="bigger-110">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Tickets</span>
 												</div>
 											</div>
 										</div>
 
-										<div class="infobox infobox-blue2">
-											<?php 
-												// $myquery = "SELECT COUNT(id) AS totalrejectassignment FROM pm_projecttasktb WHERE istask = '1' AND statusid IN ('2','5') ";
-												// $myresult = mysqli_query($conn, $myquery);
-												// while($row = mysqli_fetch_assoc($myresult)){
-												// 	$totalrejectassignment = $row['totalrejectassignment'];
-												// 	$percentrejectassignment = ($totalrejectassignment/$totalassignment)*100;
-												// }
-											?>
+										<div class="infobox infobox-green">
 											<div class="infobox-progress">
 												<div class="easy-pie-chart percentage" data-percent="100" data-size="55">
-													<span class="percent">50</span>%
+											<?php 
+													// Get count of tickets with statusid = 6 (Done)
+													$done_sql = "SELECT COUNT(*) as done_count 
+																 FROM pm_projecttasktb 
+																 WHERE createdbyid = " . intval($user_id) . "
+																 AND statusid = 6
+																 AND istask = 2";
+													$done_result = mysqli_query($conn, $done_sql);
+													$done_count = 0;
+													
+													if ($done_result && mysqli_num_rows($done_result) > 0) {
+														$done = mysqli_fetch_assoc($done_result);
+														$done_count = $done['done_count'];
+													}
+													?>
+													<span class="percent"><?php echo $done_count; ?></span>
 												</div>
 											</div>
-
 											<div class="infobox-data">
-												<span class="infobox-text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Reject</span>
-
+												<span class="infobox-text">&nbsp;&nbsp;&nbsp;&nbsp;Done</span>
 												<div class="infobox-content">
-													<span class="bigger-110">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Assignment</span>
+													<span class="bigger-110">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Tickets</span>
 												</div>
 											</div>
 										</div>
 
-										<div class="space-6"></div>
-
-										<div class="infobox infobox-green infobox-large infobox-dark">
-											<?php 
-												// $myquery = "SELECT COUNT(id) AS totaldoneticket FROM pm_projecttasktb WHERE istask = '2' AND statusid IN ('6') ";
-												// $myresult = mysqli_query($conn, $myquery);
-												// while($row = mysqli_fetch_assoc($myresult)){
-												// 	$totaldoneticket = $row['totaldoneticket'];
-												// 	$percentdoneticket = ($totaldoneticket/$totaltickets)*100;
-												// }
-											?>
+										<div class="infobox infobox-orange2">
 											<div class="infobox-progress">
-												<div class="easy-pie-chart percentage" data-percent="20" data-size="55">
-													<span class="percent">20</span>%
+												<div class="easy-pie-chart percentage" data-percent="100" data-size="55">
+													<?php
+													// Get count of tickets with statusid = 2 (Rejected)
+													$reject_sql = "SELECT COUNT(*) as reject_count 
+																   FROM pm_projecttasktb 
+																   WHERE createdbyid = " . intval($user_id) . "
+																   AND statusid = 2
+																   AND istask = 2";
+													$reject_result = mysqli_query($conn, $reject_sql);
+													$reject_count = 0;
+													
+													if ($reject_result && mysqli_num_rows($reject_result) > 0) {
+														$reject = mysqli_fetch_assoc($reject_result);
+														$reject_count = $reject['reject_count'];
+													}
+													?>
+													<span class="percent"><?php echo $reject_count; ?></span>
 												</div>
 											</div>
-
 											<div class="infobox-data">
-												<div class="infobox-content">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Task</div>
-												<div class="infobox-content">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Closed</div>
+												<span class="infobox-text">&nbsp;&nbsp;&nbsp;&nbsp;Reject</span>
+												<div class="infobox-content">
+													<span class="bigger-110">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Tickets</span>
+												</div>
 											</div>
 										</div>
 
-										<div class="infobox infobox-blue infobox-large infobox-dark">
-											<?php 
-												// $myquery = "SELECT COUNT(id) AS totaldoneassignment FROM pm_projecttasktb WHERE istask = '1' AND statusid IN ('6') ";
-												// $myresult = mysqli_query($conn, $myquery);
-												// while($row = mysqli_fetch_assoc($myresult)){
-												// 	$totaldoneassignment = $row['totaldoneassignment'];
-												// 	$percentdoneassignment = ($totaldoneassignment/$totalassignment)*100;
-												// }
-											?>
+										<div class="infobox infobox-orange2">
 											<div class="infobox-progress">
-												<div class="easy-pie-chart percentage" data-percent="20" data-size="55">
-													<span class="percent">20</span>%
+												<div class="easy-pie-chart percentage" data-percent="100" data-size="55">
+													<?php
+													// Get count of tickets with statusid = 5 (Cancelled)
+													$cancelled_sql = "SELECT COUNT(*) as cancelled_count 
+																	  FROM pm_projecttasktb 
+																	  WHERE createdbyid = " . intval($user_id) . "
+																	  AND statusid = 5
+																	  AND istask = 2";
+													$cancelled_result = mysqli_query($conn, $cancelled_sql);
+													$cancelled_count = 0;
+													
+													if ($cancelled_result && mysqli_num_rows($cancelled_result) > 0) {
+														$cancelled = mysqli_fetch_assoc($cancelled_result);
+														$cancelled_count = $cancelled['cancelled_count'];
+													}
+													?>
+													<span class="percent"><?php echo $cancelled_count; ?></span>
 												</div>
 											</div>
-
 											<div class="infobox-data">
-												<div class="infobox-content">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Assignment</div>
-												<div class="infobox-content">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Closed</div>
+												<span class="infobox-text">&nbsp;&nbsp;&nbsp;&nbsp;Cancelled</span>
+												<div class="infobox-content">
+													<span class="bigger-110">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Tickets</span>
+												</div>
 											</div>
 										</div>
 
-										
 									</div>
-									<div class="row">
-										<div class="col-sm-5">
-											<div class="widget-box transparent">
-												<div class="widget-header widget-header-flat">
-													<h4 class="widget-title lighter">
-														<i class="ace-icon fa fa-star orange"></i>
-														Classification Status
-													</h4>
+
+									<div class="col-sm-12 col-md-6 infobox-container">
+										
+										<div class="infobox infobox-blue" style="width: 87%;">
+											<div class="infobox-icon">
+												<i class="ace-icon fa fa-tasks"></i>
+											</div>
+											<div class="infobox-data">
+												<div style="display: flex; justify-content: space-between; width: 100%;">
+													<div style="margin-left: 15px;">
+														<?php
+														// Get total assignments created by the user where istask = 1
+														$assignments_sql = "SELECT COUNT(*) as assignment_count FROM pm_projecttasktb WHERE createdbyid = " . intval($user_id) . " AND istask = 1";
+														$assignments_result = mysqli_query($conn, $assignments_sql);
+														$assignment_count = 0;
+														
+														if ($assignments_result && mysqli_num_rows($assignments_result) > 0) {
+															$assignments = mysqli_fetch_assoc($assignments_result);
+															$assignment_count = $assignments['assignment_count'];
+														}
+														?>
+														<span class="infobox-data-number"><?php echo $assignment_count; ?></span>
+														<div class="infobox-content">Total Assignment</div>
+													</div>
 												</div>
+											</div>
+										</div>
 
-												<div class="widget-body">
-													<div class="widget-main no-padding">
-														<table class="table table-bordered table-striped">
-															<thead class="thin-border-bottom">
-																<tr>
-																	<th>
-																		<i class="ace-icon fa fa-caret-right blue"></i>Classification
-																	</th>
+										<div class="infobox infobox-pink">
+											<div class="infobox-progress">
+												<div class="easy-pie-chart percentage" data-percent="100" data-size="55">
+													<?php 
+													// Get count of assignments with statusid = 1 (New)
+													$assign_new_sql = "SELECT COUNT(*) as new_count 
+																	   FROM pm_projecttasktb 
+																	   WHERE createdbyid = " . intval($user_id) . "
+																	   AND statusid = 1
+																	   AND istask = 1";
+													$assign_new_result = mysqli_query($conn, $assign_new_sql);
+													$assign_new_count = 0;
+													
+													if ($assign_new_result && mysqli_num_rows($assign_new_result) > 0) {
+														$assign_new = mysqli_fetch_assoc($assign_new_result);
+														$assign_new_count = $assign_new['new_count'];
+													}
+													?>
+													<span class="percent"><?php echo $assign_new_count; ?></span>
+												</div>
+											</div>
+											<div class="infobox-data">
+												<span class="infobox-text">&nbsp;&nbsp;&nbsp;&nbsp;New</span>
+												<div class="infobox-content">
+													<span class="bigger-110">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Assignments</span>
+												</div>
+											</div>
+										</div>
 
-																	<th>
-																		<i class="ace-icon fa fa-caret-right blue"></i>Total Count
-																	</th>
+										<div class="infobox infobox-pink">
+											<div class="infobox-progress">
+												<div class="easy-pie-chart percentage" data-percent="50" data-size="55">
+													<?php 
+													// Get count of assignments with statusid = 3 (In Progress)
+													$assign_in_progress_sql = "SELECT COUNT(*) as in_progress_count 
+																			   FROM pm_projecttasktb 
+																			   WHERE createdbyid = " . intval($user_id) . "
+																			   AND statusid = 3
+																			   AND istask = 1";
+													$assign_in_progress_result = mysqli_query($conn, $assign_in_progress_sql);
+													$assign_in_progress_count = 0;
+													
+													if ($assign_in_progress_result && mysqli_num_rows($assign_in_progress_result) > 0) {
+														$assign_in_progress = mysqli_fetch_assoc($assign_in_progress_result);
+														$assign_in_progress_count = $assign_in_progress['in_progress_count'];
+													}
+													?>
+													<span class="percent"><?php echo $assign_in_progress_count; ?></span>
+												</div>
+											</div>
+											<div class="infobox-data">
+												<span class="infobox-text">&nbsp;&nbsp;&nbsp;&nbsp;In Progress</span>
+												<div class="infobox-content">
+													<span class="bigger-110">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Assignments</span>
+												</div>
+											</div>
+										</div>
 
-																	<th class="hidden-480">
-																		<i class="ace-icon fa fa-caret-right blue"></i>Ongoing
-																	</th>
-																	
+										<div class="infobox infobox-pink">
+											<div class="infobox-progress">
+												<div class="easy-pie-chart percentage" data-percent="100" data-size="55">
+													<?php 
+													// Get count of assignments with statusid = 4 (Pending)
+													$assign_pending_sql = "SELECT COUNT(*) as pending_count 
+																			   FROM pm_projecttasktb 
+																			   WHERE createdbyid = " . intval($user_id) . "
+																			   AND statusid = 4
+																			   AND istask = 1";
+													$assign_pending_result = mysqli_query($conn, $assign_pending_sql);
+													$assign_pending_count = 0;
+													
+													if ($assign_pending_result && mysqli_num_rows($assign_pending_result) > 0) {
+														$assign_pending = mysqli_fetch_assoc($assign_pending_result);
+														$assign_pending_count = $assign_pending['pending_count'];
+													}
+													?>
+													<span class="percent"><?php echo $assign_pending_count; ?></span>
+												</div>
+											</div>
+											<div class="infobox-data">
+												<span class="infobox-text">&nbsp;&nbsp;&nbsp;&nbsp;Pending</span>
+												<div class="infobox-content">
+													<span class="bigger-110">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Assignments</span>
+												</div>
+											</div>
+										</div>
+
+										<div class="infobox infobox-red">
+											<div class="infobox-progress">
+												<div class="easy-pie-chart percentage" data-percent="100" data-size="55">
+											<?php 
+													// Get count of assignments with statusid = 6 (Done)
+													$assign_done_sql = "SELECT COUNT(*) as done_count 
+																	   FROM pm_projecttasktb 
+																	   WHERE createdbyid = " . intval($user_id) . "
+																	   AND statusid = 6
+																	   AND istask = 1";
+													$assign_done_result = mysqli_query($conn, $assign_done_sql);
+													$assign_done_count = 0;
+													
+													if ($assign_done_result && mysqli_num_rows($assign_done_result) > 0) {
+														$assign_done = mysqli_fetch_assoc($assign_done_result);
+														$assign_done_count = $assign_done['done_count'];
+													}
+													?>
+													<span class="percent"><?php echo $assign_done_count; ?></span>
+												</div>
+											</div>
+
+											<div class="infobox-data">
+												<span class="infobox-text">&nbsp;&nbsp;&nbsp;&nbsp;Done</span>
+												<div class="infobox-content">
+													<span class="bigger-110">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Assignments</span>
+												</div>
+											</div>
+										</div>
+
+										<div class="infobox infobox-orange2">
+											<div class="infobox-progress">
+												<div class="easy-pie-chart percentage" data-percent="100" data-size="55">
+													<?php
+													// Get count of assignments with statusid = 2 (Rejected)
+													$assign_reject_sql = "SELECT COUNT(*) as reject_count 
+																	   FROM pm_projecttasktb 
+																	   WHERE createdbyid = " . intval($user_id) . "
+																	   AND statusid = 2
+																	   AND istask = 1";
+													$assign_reject_result = mysqli_query($conn, $assign_reject_sql);
+													$assign_reject_count = 0;
+													
+													if ($assign_reject_result && mysqli_num_rows($assign_reject_result) > 0) {
+														$assign_reject = mysqli_fetch_assoc($assign_reject_result);
+														$assign_reject_count = $assign_reject['reject_count'];
+													}
+													?>
+													<span class="percent"><?php echo $assign_reject_count; ?></span>
+												</div>
+											</div>
+											<div class="infobox-data">
+												<span class="infobox-text">&nbsp;&nbsp;&nbsp;&nbsp;Reject</span>
+												<div class="infobox-content">
+													<span class="bigger-110">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Assignments</span>
+												</div>
+											</div>
+										</div>
+
+										<div class="infobox infobox-orange2">
+											<div class="infobox-progress">
+												<div class="easy-pie-chart percentage" data-percent="100" data-size="55">
+													<?php
+													// Get count of assignments with statusid = 5 (Cancelled)
+													$assign_cancelled_sql = "SELECT COUNT(*) as cancelled_count 
+																			   FROM pm_projecttasktb 
+																			   WHERE createdbyid = " . intval($user_id) . "
+																			   AND statusid = 5
+																			   AND istask = 1";
+													$assign_cancelled_result = mysqli_query($conn, $assign_cancelled_sql);
+													$assign_cancelled_count = 0;
+													
+													if ($assign_cancelled_result && mysqli_num_rows($assign_cancelled_result) > 0) {
+														$assign_cancelled = mysqli_fetch_assoc($assign_cancelled_result);
+														$assign_cancelled_count = $assign_cancelled['cancelled_count'];
+													}
+													?>
+													<span class="percent"><?php echo $assign_cancelled_count; ?></span>
+												</div>
+											</div>
+											<div class="infobox-data">
+												<span class="infobox-text">&nbsp;&nbsp;&nbsp;&nbsp;Cancelled</span>
+												<div class="infobox-content">
+													<span class="bigger-110">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Assignments</span>
+												</div>
+											</div>
+										</div>
+
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div class="row">
+							<div class="col-sm-12 col-md-8 col-md-offset-2">
+								<div class="row">
+									<div class="space-6"></div>
+									<div class="col-sm-12 col-md-6">
+										<div class="widget-box transparent">
+											<div class="widget-header widget-header-flat">
+												<h4 class="widget-title lighter">
+													<i class="ace-icon fa fa-star orange"></i>
+													Ticket Classification Status
+												</h4>
+											</div>
+
+											<div class="widget-body">
+												<div class="widget-main no-padding table-responsive">
+													<table class="table table-bordered table-striped">
+														<thead class="thin-border-bottom">
+															<tr>
+																<th>
+																	<i class="ace-icon fa fa-caret-right blue"></i>Classification
+																</th>
+
+																<th>
+																	<i class="ace-icon fa fa-caret-right blue"></i>Total Count
+																</th>
+
+																<th class="hidden-480">
+																	<i class="ace-icon fa fa-caret-right blue"></i>Ongoing
+																</th>
+															
 																	<th class="hidden-480">
 																		<i class="ace-icon fa fa-caret-right blue"></i>Closed
 																	</th>
-																</tr>
-															</thead>
+															</tr>
+														</thead>
 
-															<tbody>
-																<?php
-																	$myquerya = "SELECT classification,id
-																				FROM sys_taskclassificationtb";
-																	$myresulta = mysqli_query($conn, $myquerya);
-																		while($rowa = mysqli_fetch_assoc($myresulta)){
-																			$classificationName = $rowa['classification'];
-																			$classificationNameId = $rowa['id'];
+														<tbody>
+															<?php
+																// Define classifications
+																$classifications = [
+																	1 => 'Feature',
+																	2 => 'Enhancement',
+																	3 => 'Bug/Error',
+																	4 => 'Support/Maintenance',
+																	5 => 'Others'
+																];
+
+																foreach ($classifications as $classificationId => $classificationName) {
+															?>
+															<tr>
+																<td><?php echo $classificationName; ?></td>
+																<?php 
+																	// Total tickets in this classification for the current user
+																	$myquery = "SELECT COUNT(id) AS countfeature FROM pm_projecttasktb WHERE classificationid = '$classificationId' AND istask = 2 AND createdbyid = " . intval($user_id) . " AND statusid IN ('1','2','3','4','5','6')";
+																	$myresult = mysqli_query($conn, $myquery);
+																	$totalfeature = 0;
+																	if ($myresult && mysqli_num_rows($myresult) > 0) {
+																		$row = mysqli_fetch_assoc($myresult);
+																		$totalfeature = $row['countfeature'];
+																	}
 																	
+																	// Ongoing tickets in this classification for the current user
+																	$myquery2 = "SELECT COUNT(id) AS countfeaturenotdone FROM pm_projecttasktb WHERE classificationid = '$classificationId' AND istask = 2 AND createdbyid = " . intval($user_id) . " AND statusid IN ('1','2','3','4','5')";
+																	$myresult2 = mysqli_query($conn, $myquery2);
+																	$totalnotdone = 0;
+																	if ($myresult2 && mysqli_num_rows($myresult2) > 0) {
+																		$row2 = mysqli_fetch_assoc($myresult2);
+																		$totalnotdone = $row2['countfeaturenotdone'];
+																	}
+																	
+																	// Closed tickets in this classification for the current user
+																	$myquery3 = "SELECT COUNT(id) AS countfeaturedone FROM pm_projecttasktb WHERE classificationid = '$classificationId' AND istask = 2 AND createdbyid = " . intval($user_id) . " AND statusid = '6'";
+																	$myresult3 = mysqli_query($conn, $myquery3);
+																	$totaldone = 0;
+																	if ($myresult3 && mysqli_num_rows($myresult3) > 0) {
+																		$row3 = mysqli_fetch_assoc($myresult3);
+																		$totaldone = $row3['countfeaturedone'];
+																	}
+																?>
+
+																<td>
+																	<center><b class="green"><?php echo $totalfeature; ?></b></center>
+																</td>
+
+																<td class="hidden-480">
+																	<center><b class="red"><?php echo $totalnotdone; ?></b></center>
+																</td>
+															
+																	<td class="hidden-480">
+																		<span class="label label-info arrowed-right arrowed-in"><?php echo $totaldone; ?></span>
+																	</td>
+															</tr>
+															<?php 
+																}
+															?>
+														</tbody>
+													</table>
+												</div>
+											</div>
+										</div>
+									</div>
+
+									<div class="col-sm-12 col-md-6">
+										<div class="widget-box transparent">
+											<div class="widget-header widget-header-flat">
+												<h4 class="widget-title lighter">
+													<i class="ace-icon fa fa-star orange"></i>
+													Assignment Classification Status
+												</h4>
+											</div>
+
+											<div class="widget-body">
+												<div class="widget-main no-padding table-responsive">
+													<table class="table table-bordered table-striped">
+														<thead class="thin-border-bottom">
+															<tr>
+																<th>
+																	<i class="ace-icon fa fa-caret-right blue"></i>Classification
+																</th>
+
+																<th>
+																	<i class="ace-icon fa fa-caret-right blue"></i>Total Count
+																</th>
+
+																<th class="hidden-480">
+																	<i class="ace-icon fa fa-caret-right blue"></i>Ongoing
+																</th>
+															
+																	<th class="hidden-480">
+																		<i class="ace-icon fa fa-caret-right blue"></i>Closed
+																	</th>
+															</tr>
+														</thead>
+
+														<tbody>
+															<?php
+																$myquerya = "SELECT classification,id FROM sys_taskclassificationtb";
+																$myresulta = mysqli_query($conn, $myquerya);
+																while($rowa = mysqli_fetch_assoc($myresulta)){
+																	$classificationName = $rowa['classification'];
+																	$classificationNameId = $rowa['id'];
 																?>
 																<tr>
 																	<td><?php echo $classificationName; ?></td>
 																	<?php 
-																		$myquery = "SELECT COUNT(id) AS countfeature
-																					FROM pm_projecttasktb
-																					WHERE classificationid = '$classificationNameId' AND statusid IN ('1','2','3','4','5','6') ";
+																		// Total assignments in this classification for the current user
+																		$myquery = "SELECT COUNT(id) AS countfeature FROM pm_projecttasktb WHERE classificationid = '$classificationNameId' AND istask = 1 AND createdbyid = " . intval($user_id) . " AND statusid IN ('1','2','3','4','5','6')";
 																		$myresult = mysqli_query($conn, $myquery);
-																		while($row = mysqli_fetch_assoc($myresult)){
+																		$totalfeature = 0;
+																		if ($myresult && mysqli_num_rows($myresult) > 0) {
+																			$row = mysqli_fetch_assoc($myresult);
 																			$totalfeature = $row['countfeature'];
 																		}
 																	
-																		$myquery2 = "SELECT COUNT(id) AS countfeaturenotdone
-																					FROM pm_projecttasktb
-																					WHERE classificationid = '$classificationNameId' AND statusid IN ('1','2','3','4','5') ";
+																		// Ongoing assignments in this classification for the current user
+																		$myquery2 = "SELECT COUNT(id) AS countfeaturenotdone FROM pm_projecttasktb WHERE classificationid = '$classificationNameId' AND istask = 1 AND createdbyid = " . intval($user_id) . " AND statusid IN ('1','2','3','4','5')";
 																		$myresult2 = mysqli_query($conn, $myquery2);
-																		while($row2 = mysqli_fetch_assoc($myresult2)){
+																		$totalnotdone = 0;
+																		if ($myresult2 && mysqli_num_rows($myresult2) > 0) {
+																			$row2 = mysqli_fetch_assoc($myresult2);
 																			$totalnotdone = $row2['countfeaturenotdone'];
 																		}
-																		
-																		$myquery3 = "SELECT COUNT(id) AS countfeaturedone
-																					FROM pm_projecttasktb
-																					WHERE classificationid = '$classificationNameId' AND statusid IN ('6') ";
+																				
+																		// Closed assignments in this classification for the current user
+																		$myquery3 = "SELECT COUNT(id) AS countfeaturedone FROM pm_projecttasktb WHERE classificationid = '$classificationNameId' AND istask = 1 AND createdbyid = " . intval($user_id) . " AND statusid = '6'";
 																		$myresult3 = mysqli_query($conn, $myquery3);
-																		while($row3 = mysqli_fetch_assoc($myresult3)){
+																		$totaldone = 0;
+																		if ($myresult3 && mysqli_num_rows($myresult3) > 0) {
+																			$row3 = mysqli_fetch_assoc($myresult3);
 																			$totaldone = $row3['countfeaturedone'];
 																		}
 																	?>
@@ -350,35 +751,34 @@
 																	<td class="hidden-480">
 																		<center><b class="red"><?php echo $totalnotdone; ?></b></center>
 																	</td>
-																	
+																
 																	<td class="hidden-480">
 																		<span class="label label-info arrowed-right arrowed-in"><?php echo $totaldone; ?></span>
 																	</td>
 																</tr>
 																<?php 
-																		}
-																		?>
-															</tbody>
-														</table>
-													</div><!-- /.widget-main -->
-												</div><!-- /.widget-body -->
-											</div><!-- /.widget-box -->
-										</div><!-- /.col -->
+																	}
+																?>
+														</tbody>
+													</table>
+												</div>
+											</div>
+										</div>
 									</div>
 								</div>
-								
 							</div>
 						</div>
-					</div><!-- /.page-content -->
+					</div>
 				</div>
-			</div><!-- /.main-content -->
+			</div>
+		</div>
 
-			<?php include "blocks/footer.php"; ?>
-
-			
-		</div><!-- /.main-container -->
+		<?php include "blocks/footer.php"; ?>
 
 		
-	</body>
+	</div><!-- /.main-container -->
+
+	
+</body>
 </html>
 
