@@ -577,7 +577,7 @@ if (mysqli_num_rows($task_result) > 0) {
 								</small>
 								<small>
 									<i class="ace-icon fa fa-angle-double-right"></i>
-									<span class="editable" id="subject"><?php echo htmlspecialchars($task['subject'] ?? 'N/A'); ?></span>
+									<span class="editable" id="ticketID"><?php echo htmlspecialchars($task['srn_id'] ?? 'N/A'); ?></span>
 								</small>						
 							</h1>
 						</div><!-- /.page-header -->
@@ -639,6 +639,26 @@ document.addEventListener('DOMContentLoaded', function() {
 		</div>
 
         <div class="profile-user-info profile-user-info-striped">
+
+		<div class="profile-info-row">
+
+                <div class="profile-info-name"> Created By </div>
+                <div class="profile-info-value">
+                    <?php 
+                    $createdByName = 'Unknown User';
+                    if (!empty($task['createdbyid'])) {
+                        $createdbyid = mysqli_real_escape_string($mysqlconn, $task['createdbyid']);
+                        $user_query = mysqli_query($mysqlconn, "SELECT user_firstname, user_lastname FROM sys_usertb WHERE id = '$createdbyid'");
+                        if ($user_query) {
+                            $user_data = mysqli_fetch_assoc($user_query);
+                            $createdByName = $user_data ? htmlspecialchars($user_data['user_firstname'].' '.$user_data['user_lastname']) : 'Unknown User';
+                        }
+                    }
+                    echo '<span class="editable" id="createdBy">' . $createdByName . '</span>';
+                    ?>
+                </div>
+            </div>
+			<hr class="hr-8 dotted">
 			<div class="profile-info-row">
                 <div class="profile-info-name"> 
 				<span class="editable" id="istask">
@@ -650,7 +670,7 @@ document.addEventListener('DOMContentLoaded', function() {
 				</span>				
 				</div>
                 <div class="profile-info-value">
-                    <span class="editable" id="ticketID"><?php echo htmlspecialchars($task['id'] ?? 'N/A'); ?></span>
+                    <span class="editable" id="ticketID"><?php echo htmlspecialchars($task['srn_id'] ?? 'N/A'); ?></span>
                 </div>
             </div>
 
@@ -660,6 +680,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <span class="editable" id="description"><?php echo strip_tags($task['description'] ?? 'N/A'); ?></span>
                 </div>
             </div>
+			
 			<hr class="hr-8 dotted">
 		<div class="profile-info-row">
                 <div class="profile-info-name"> Project Owner </div>
@@ -803,12 +824,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </button>
         </div> -->
 
-		<div style="margin-bottom: 15px; text-align: right; margin-right: 80%;">
-			<a href="projectmanagement.php" class="btn btn-primary btn-sm">
-				<i class="ace-icon fa fa-arrow-left"></i>
-				Back
-			</a>
-   		</div>
+		
 </div>
 
 	

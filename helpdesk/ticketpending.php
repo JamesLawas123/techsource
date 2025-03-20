@@ -31,6 +31,7 @@ $rest="";
 		<thead>
 			<tr>
 				<th>Task ID</th>
+				<th>Created By</th>
 				<th>Tracker</th>
 				<th>Status</th>
 				<th>Priority</th>
@@ -88,6 +89,18 @@ $rest="";
 		?>
 			<tr>
 				<td><?php echo $row['srn_id'];?></td>
+				<td>
+															<?php 
+																$createdbyid = mysqli_real_escape_string($conn, $row['createdbyid']);
+																$user_query = mysqli_query($conn, "SELECT user_firstname, user_lastname FROM sys_usertb WHERE id = '$createdbyid'");
+																if($user_query) {
+																	$user_data = mysqli_fetch_assoc($user_query);
+																	echo $user_data ? $user_data['user_firstname'].' '.$user_data['user_lastname'] : 'Unknown User';
+																} else {
+																	echo 'Error: ' . mysqli_error($conn);
+																}
+															?>
+														</td>
 				<td><?php echo $row['classification'];?></td>
 				<td><?php echo $row['statusname'];?></td>
 				<td><?php echo $row['priorityname'];?></td>
