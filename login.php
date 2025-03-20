@@ -12,6 +12,13 @@
 		<link rel="stylesheet" href="assets/css/fonts.googleapis.com.css" />
 		<link rel="stylesheet" href="assets/css/ace.min.css" />
 		<link rel="stylesheet" href="assets/css/ace-rtl.min.css" />
+		<style>
+			.alert-info {
+				color: #31708f;
+				background-color: #d9edf7;
+				border-color: #bce8f1;
+			}
+		</style>
 	<script type="text/javascript">
 			function getXMLHTTP() { //fuction to return the xml http object
 			var xmlhttp=false;	
@@ -55,12 +62,30 @@
 								
 								//css display
 								var ele = document.getElementById("toggleText");
-
+								var errorMessage = document.getElementById("errorMessage");
 								
-								if(data[1] == 0)
+								if(data[1] == 4)
 								{
-								
-									//alert('Access Denied.');								
+									// Pending Approval
+									ele.className = "alert alert-info alert-dismissable";
+									errorMessage.innerHTML = "Welcome " + data[2] + "! Your account is pending approval. " +
+										"Please wait for the admin's email verification.";
+									ele.style.display = "block";
+									clearfields(); 
+								}
+								else if(data[1] == 0)
+								{
+									if(data[2] == 2)
+									{
+										// Account is inactive
+										errorMessage.innerHTML = "Your account is inactive. Please contact administrator.";
+									}
+									else
+									{
+										// Invalid username/password
+										errorMessage.innerHTML = "Invalid Username or password. Please try again.";
+									}
+									ele.className = "alert alert-danger alert-dismissable";
 									ele.style.display = "block";
 									clearfields(); 
 									$('#box').shake();
@@ -68,7 +93,8 @@
 								}
 								else if(data[1] == 2)
 								{
-									//alert('Access Denied. No Record found.');
+									// No record found
+									errorMessage.innerHTML = "Invalid Username or password. Please try again.";
 									ele.style.display = "block";
 									clearfields(); 
 									$('#box').shake();
@@ -181,11 +207,14 @@
 												</div>
 												<div class="alert alert-danger alert-dismissable" style="display: none" id="toggleText">
 													<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-													Invalid Username or password. Please try again using the correct log-in information.
+													<span id="errorMessage">Invalid Username or password. Please try again using the correct log-in information.</span>
 												</div>  
 												<!-- Change this to a button or input when using this as a form -->
 												<button id="loginbtn" type="button" class="btn btn-primary btn-success btn-lg btn-block input-xs" onclick="processvalidate('session.php?username='+document.getElementById('username').value+'&pswd='+document.getElementById('pswd').value+'&remember='+document.getElementById('remember').value)" value="Login">Login</button>
 												<br>
+												<div class="text-center" style="margin-top: 15px;">
+													Don't have an account? <a href="register.php">Register here</a>
+												</div>
 												<p class="help-block">
 													<!--<a href="../hrportal/index.php" target="_self">
 														<i class="glyphicon glyphicon-hand-right"></i>&nbsp;Back to HR Portal.

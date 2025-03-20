@@ -30,7 +30,7 @@ if (! isset($_COOKIE['cookusername']) && !isset ($_COOKIE['cookuserpassword']))
 		echo "Remember Me: ".$remember."<br>";*/	 
 	
 		// Look for the user in the users table.
-		$query = "SELECT * FROM sys_usertb WHERE username='$username' AND user_statusid=1";
+		$query = "SELECT * FROM sys_usertb WHERE username='$username'";
 		$result = mysqli_query($conn, $query);
 
 		if (!$result) {
@@ -47,6 +47,22 @@ if (! isset($_COOKIE['cookusername']) && !isset ($_COOKIE['cookuserpassword']))
 
 		$row3 = mysqli_fetch_assoc($result);
 		$storedPassword = $row3['password'];
+		$userStatusId = $row3['user_statusid'];
+		$userFirstName = $row3['user_firstname'];
+		$userLastName = $row3['user_lastname'];
+
+		// Check user status
+		if ($userStatusId == '3') {
+			$loc = "Pending Approval";
+			$isok = 4; // New status code for pending approval
+			echo $loc . "|" . $isok . "|" . $userFirstName . " " . $userLastName;
+			die();
+		} else if ($userStatusId != '1') {
+			$loc = "Account Inactive";
+			$isok = 0;
+			echo $loc . "|" . $isok;
+			die();
+		}
 
 		// Debug information
 		error_log("Login attempt for user: " . $username);

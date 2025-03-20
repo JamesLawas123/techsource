@@ -241,6 +241,9 @@ $conn = connectionDB();
 												<!-- Change this to a button or input when using this as a form -->
 												<button id="loginbtn" type="button" class="btn btn-primary btn-success btn-lg btn-block input-xs" onclick="processvalidate('session.php?username='+document.getElementById('username').value+'&pswd='+document.getElementById('pswd').value+'&remember='+document.getElementById('remember').value)" value="Login">Login</button>
 												<br>
+												<div class="text-center" style="margin-top: 15px;">
+													Don't have an account? <a href="register.php">Register here</a>
+												</div>
 												<p class="help-block">
 													<!--<a href="../hrportal/index.php" target="_self">
 														<i class="glyphicon glyphicon-hand-right"></i>&nbsp;Back to HR Portal.
