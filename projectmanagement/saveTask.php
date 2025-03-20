@@ -179,14 +179,14 @@ $num_rows = mysqli_num_rows($myresult);
 		$existingTask = mysqli_fetch_assoc($debugResult);
 		
 		echo "<div class='alert alert-danger fade in'>";
-		echo "Duplicate Entry Found:<br>";
-		echo "Subject: " . htmlspecialchars($taskSubject) . "<br>";
-		echo "Project: " . htmlspecialchars($taskProjectOwner) . "<br>";
-		echo "Classification: " . htmlspecialchars($taskClassification) . "<br>";
-		echo "Existing Task ID: " . htmlspecialchars($existingTask['id']) . "<br>";
-		echo "Created By: " . htmlspecialchars($existingTask['createdbyid']) . "<br>";
-		echo "Created On: " . htmlspecialchars($existingTask['created_at']) . "<br>";
-		echo "Debug Query: " . htmlspecialchars($debugQuery);
+		echo "Duplicate Entry!<br>";
+		// echo "Subject: " . htmlspecialchars($taskSubject) . "<br>";
+		// echo "Project: " . htmlspecialchars($taskProjectOwner) . "<br>";
+		// echo "Classification: " . htmlspecialchars($taskClassification) . "<br>";
+		// echo "Existing Task ID: " . htmlspecialchars($existingTask['id']) . "<br>";
+		// echo "Created By: " . htmlspecialchars($existingTask['createdbyid']) . "<br>";
+		// echo "Created On: " . htmlspecialchars($existingTask['created_at']) . "<br>";
+		// echo "Debug Query: " . htmlspecialchars($debugQuery);
 		echo "</div>";
 	}
 }else{
