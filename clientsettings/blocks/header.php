@@ -338,7 +338,7 @@ include('../check_session.php');
 								</li>
 
 								<li>
-									<a href="profile.html">
+									<a href="../userprofile.php">
 										<i class="ace-icon fa fa-user"></i>
 										Profile
 									</a>
