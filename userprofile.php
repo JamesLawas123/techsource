@@ -131,14 +131,7 @@
 				margin-top: 10px;
 			}
 		</style>
-		<script>
-		function handleInfoboxClick(type, status) {
-			// For development - just log the click
-			console.log('Clicked:', type, 'with status:', status);
-			// Prevent default navigation
-			return false;
-		}
-		</script>
+		
 	</head>
 
 	<body class="no-skin">
@@ -1152,6 +1145,56 @@
 				}
 			});
 		});
+		</script>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+		<script>
+		function handleInfoboxClick(type, status) {
+			// Get the count value from the clicked infobox
+			let count = parseInt(event.currentTarget.querySelector('.percent').textContent);
+			
+			// If count is 0, show sweet alert and prevent navigation
+			if (count === 0) {
+				Swal.fire({
+					icon: 'info',
+					title: 'No Items',
+					text: 'There are no items to display in this category.',
+				});
+				return false;
+			}
+
+			// Define the redirect URLs based on type and status
+			const redirectUrls = {
+				tickets: {
+					'1': 'http://localhost/techsource/helpdesk/helpdesk.php#ticketlist',
+					'3': 'http://localhost/techsource/helpdesk/helpdesk.php#ticketprogress',
+					'4': 'http://localhost/techsource/helpdesk/helpdesk.php#ticketpending',
+					'6': 'http://localhost/techsource/helpdesk/helpdesk.php#ticketdone',
+					'2': 'http://localhost/techsource/helpdesk/helpdesk.php#ticketreject',
+					'5': 'http://localhost/techsource/helpdesk/helpdesk.php#ticketcancelled',
+					'all': 'http://localhost/techsource/helpdesk/helpdesk.php#ticketlist'
+				},
+				assignments: {
+					'1': 'http://localhost/techsource/projectmanagement/projectmanagement.php#taskfrompm',
+					'3': 'http://localhost/techsource/projectmanagement/projectmanagement.php#taskfrompm',
+					'4': 'http://localhost/techsource/projectmanagement/projectmanagement.php#taskfrompm',
+					'6': 'http://localhost/techsource/projectmanagement/projectmanagement.php#taskfrompmdone',
+					'2': 'http://localhost/techsource/projectmanagement/projectmanagement.php#taskfrompmreject',
+					'5': 'http://localhost/techsource/projectmanagement/projectmanagement.php#taskfrompm',
+					'all': 'http://localhost/techsource/projectmanagement/projectmanagement.php#taskfrompm'
+				}
+			};
+
+			// Get the redirect URL
+			const redirectUrl = redirectUrls[type][status];
+			
+			// Redirect to the appropriate URL
+			if (redirectUrl) {
+				window.location.href = redirectUrl;
+			}
+			
+			return false;
+		}
 		</script>
 	</body>
 </html>
